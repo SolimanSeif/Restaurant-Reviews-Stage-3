@@ -1,0 +1,62 @@
+.restaurants-list {
+	display: flex;
+	flex-wrap: wrap;
+	width:100%;
+	max-width: 1110px;
+	margin-left: auto;
+	margin-right: auto;
+}
+
+.searchingCriteriaBar{
+	display: flex;
+	flex-wrap: wrap;
+	width:100%;
+	max-width: 800px;
+	margin-left: auto;
+	margin-right: auto;
+}
+.searchingCriteriaDiv{
+	width: 50%;
+}
+
+
+.filter-label-options {
+	font-size: 12pt;
+	color: white;
+	font-weight: normal;
+  	line-height: 1;
+}
+
+
+@media screen and (max-width: 360px){
+	.filter-options select{
+		margin-left: 2%;
+		width: 40%;
+	}
+}
+
+@media screen and (min-width: 361px){
+	.filter-options select{
+		margin-left: 10%;
+		width: 30%;
+	}
+}
+
+@media screen and (max-width: 745px){
+	.restaurants-list{
+		width: 334px;
+		margin-left: auto;
+		margin-right: auto;
+	}
+}
+
+@media screen and (min-width: 746px) and (max-width: 1108px){
+	.restaurants-list{
+		width: 740px;
+		margin-left: auto;
+		margin-right: auto;
+	}
+}
+
+
+
