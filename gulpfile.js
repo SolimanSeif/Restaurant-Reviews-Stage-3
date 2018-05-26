@@ -6,6 +6,7 @@ const del = require('del');
 const wiredep = require('wiredep').stream;
 const runSequence = require('run-sequence');
 const eslint = require('gulp-eslint');
+const gzip = require('gulp-gzip');
 
 const $ = gulpLoadPlugins();
 const reload = browserSync.reload;
@@ -34,8 +35,8 @@ gulp.task('scripts', () => {
     .pipe($.if(dev, $.sourcemaps.init()))
     .pipe($.babel())
     .pipe($.if(dev, $.sourcemaps.write('.')))
+    // .pipe(gzip({ preExtension: 'min', append: false }))
     .pipe(gulp.dest('.tmp/scripts'))
-    // .pipe(gulp.dest('dist/scripts'))
     .pipe(reload({stream: true}));
 });
 
