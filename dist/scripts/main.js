@@ -20,7 +20,7 @@ var fillSearchingCriteria = function fillSearchingCriteria() {
   if (window.Worker) {
     DBHelper.fetchRestaurants(function (error, restaurants) {
       self.restaurants = restaurants;
-      var searchWorker = new Worker('scripts/searchCriteriaWorker.js');
+      var searchWorker = new Worker('scripts/workers/searchCriteriaWorker.js');
       searchWorker.postMessage({ 'restaurants': self.restaurants });
       searchWorker.onmessage = function (message) {
         var cuisinesHTML = message.data.CuisinesHTML;
@@ -44,19 +44,6 @@ var fillSearchingCriteria = function fillSearchingCriteria() {
   }
 };
 
-/**
- * Fetch all neighborhoods and set their HTML.
- */
-// var fetchNeighborhoods = () => {
-//   DBHelper.fetchNeighborhoods((error, neighborhoods) => {
-//     if (error) { // Got an error
-//       console.error(error);
-//     } else {
-//       self.neighborhoods = neighborhoods;
-//       fillNeighborhoodsHTML();
-//     }
-//   });
-// }
 
 /**
  * Set neighborhoods HTML.
@@ -73,19 +60,6 @@ var fillNeighborhoodsHTML = function fillNeighborhoodsHTML() {
   });
 };
 
-/**
- * Fetch all cuisines and set their HTML.
- */
-// var fetchCuisines = () => {
-//   DBHelper.fetchCuisines((error, cuisines) => {
-//     if (error) { // Got an error!
-//       console.error(error);
-//     } else {
-//       self.cuisines = cuisines;
-//       fillCuisinesHTML();
-//     }
-//   });
-// }
 
 /**
  * Set cuisines HTML.
@@ -133,7 +107,7 @@ var updateRestaurants = function updateRestaurants() {
   var neighborhood = nSelect[nIndex].value;
 
   if (window.Worker) {
-    var resturantSearchWorker = new Worker('scripts/resturantSearchWorker.js');
+    var resturantSearchWorker = new Worker('scripts/workers/resturantSearchWorker.js');
     if (self.restaurants) {
       resturantSearchWorker.postMessage({
         'restaurants': self.restaurants,
@@ -398,3 +372,4 @@ function applyImage(img, src) {
   img.src = src;
   // img.classList.add('fade-in');
 }
+//# sourceMappingURL=main.js.map

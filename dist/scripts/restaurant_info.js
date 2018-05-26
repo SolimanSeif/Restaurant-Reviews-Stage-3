@@ -145,13 +145,24 @@ var fillReviewsHTML = function fillReviewsHTML(error) {
     noReviews.innerHTML = 'No reviews yet!';
     container.appendChild(noReviews);
     return;
+  } else {
+    var ul = document.getElementById('reviews-list');
+    ul.innerHTML = '';
+    if (window.Worker) {
+      var revWorker = new Worker('scripts/workers/restaurantReviewsPreparation.js');
+      revWorker.postMessage({ 'reviews': reviews });
+      revWorker.onmessage = function (message) {
+        var content = message.data.ul;
+        ul.innerHTML = ul.innerHTML + content;
+      };
+    } else {
+
+      reviews.forEach(function (review) {
+        ul.appendChild(createReviewHTML(review));
+      });
+      container.appendChild(ul);
+    }
   }
-  var ul = document.getElementById('reviews-list');
-  ul.innerHTML = '';
-  reviews.forEach(function (review) {
-    ul.appendChild(createReviewHTML(review));
-  });
-  container.appendChild(ul);
 };
 
 /**
@@ -254,9 +265,14 @@ var submitUserReviewForm = function submitUserReviewForm() {
       'createdAt': Date.now() };
     console.log(reviewInfo);
 
+    var jsonData = JSON.stringify(reviewInfo);
     fetch('http://localhost:1337/reviews/', {
       method: 'POST',
-      body: reviewInfo }).then(function (response) {
+      body: jsonData,
+      headers: {
+        'content-type': 'application/json'
+      }
+    }).then(function (response) {
       if (response) {
         return response.json();
       } else {
@@ -274,11 +290,12 @@ var submitUserReviewForm = function submitUserReviewForm() {
         afterSubmittingReviewSuccess();
       } else {
         // error 
-        addToSyncListReviews(reviewInfo);
+        addToSyncListReviews(jsonData);
         afterSubmittingReviewFail(reviewInfo);
         alert('Your review will be submitted when you go online or the review service running..');
       }
     });
+    clearSubmittedReview(rateList);
   }
 };
 
@@ -296,3 +313,16 @@ var afterSubmittingReviewFail = function afterSubmittingReviewFail(review) {
   var ul = document.getElementById('reviews-list');
   ul.appendChild(createReviewHTML(review));
 };
+
+var clearSubmittedReview = function clearSubmittedReview(rateList) {
+  document.getElementById('reviewerName').value = '';
+  document.getElementById('reviewerComment').value = '';
+
+  for (var i = 0; i < rateList.length; i++) {
+    if (rateList[i].checked) {
+      rateList[i].checked = false;
+      break;
+    }
+  }
+};
+//# sourceMappingURL=restaurant_info.js.map

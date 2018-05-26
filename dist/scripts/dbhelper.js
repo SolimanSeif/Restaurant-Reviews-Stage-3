@@ -21,37 +21,6 @@ var DBHelper = function () {
      * Fetch all restaurants.
      */
     value: function fetchRestaurants(callback) {
-      // let xhr = new XMLHttpRequest();
-      // xhr.open('GET', DBHelper.DATABASE_URL);
-      // xhr.onload = () => {
-      //   if (xhr.status === 200) { // Got a success response from server!
-      //     const json = JSON.parse(xhr.responseText);
-      //     const restaurants = json.restaurants;
-      //     callback(null, restaurants);
-      //   } else { // Oops!. Got an error from server.
-      //     const error = (`Request failed. Returned status of ${xhr.status}`);
-      //     callback(error, null);
-      //   }
-      // };
-      // xhr.send();
-
-      // let res = allResturnats();
-      // if(res){
-      //   callback(null,res);
-      // }else{
-      //   fetch(DBHelper.DATABASE_URL).then(response =>{
-      //     if(response){
-      //       return response.json();
-      //     }else{
-      //       return undefined;
-      //     }
-      //   }).then(resJson => {
-      //     addAllResturants(resJson);
-      //     callback(null, resJson);
-      //   });
-      // }
-
-
       fetch(DBHelper.DATABASE_URL).then(function (response) {
         if (response) {
           return response.json();
@@ -60,8 +29,8 @@ var DBHelper = function () {
         }
       }).then(function (resJson) {
         if (resJson) {
-          addAllResturants(resJson);
           callback(null, resJson);
+          addAllResturants(resJson);
         }
       }).catch(function (error) {
         allResturnats(callback);
@@ -77,21 +46,22 @@ var DBHelper = function () {
     value: function fetchRestaurantById(id, callback) {
       // fetch all restaurants with proper error handling.
 
-      var res = resturantByID(id);
-      if (res) {
-        callback(null, res);
-      } else {
-        fetch('http://localhost:1337/restaurants/' + id).then(function (obj) {
+      fetch('http://localhost:1337/restaurants/' + id).then(function (obj) {
+        if (obj) {
           return obj.json();
-        }).then(function (restaurant) {
-          if (restaurant === undefined) {
-            callback(error, null);
-          } else {
-            addResturant(id, restaurant);
-            callback(null, restaurant);
-          }
-        });
-      }
+        } else {
+          return undefined;
+        }
+      }).then(function (restaurant) {
+        if (restaurant) {
+          callback(null, restaurant);
+          addResturant(id, restaurant);
+        } else {
+          callback(error, null);
+        }
+      }).catch(function (error) {
+        resturantByID(id, callback);
+      });
     }
   }, {
     key: 'fetchRestaurantReviews',
@@ -212,46 +182,6 @@ var DBHelper = function () {
       });
     }
 
-    /**
-     * Fetch all neighborhoods with proper error handling.
-     */
-    // static fetchNeighborhoods(callback) {
-    //   // Fetch all restaurants
-    //   DBHelper.fetchRestaurants((error, restaurants) => {
-    //     if (error) {
-    //       callback(error, null);
-    //     } else {
-    //       // Get all neighborhoods from all restaurants
-    //       const neighborhoods = restaurants.map((v, i) => restaurants[i].neighborhood)
-    //       // Remove duplicates from neighborhoods
-    //       const uniqueNeighborhoods = neighborhoods.filter((v, i) => neighborhoods.indexOf(v) == i)
-    //       callback(null, uniqueNeighborhoods);
-    //     }
-    //   });
-    // }
-
-    /**
-     * Fetch all cuisines with proper error handling.
-     */
-    // static fetchCuisines(callback) {
-    //   // Fetch all restaurants
-    //   DBHelper.fetchRestaurants((error, restaurants) => {
-    //     if (error) {
-    //       callback(error, null);
-    //     } else {
-    //       // Get all cuisines from all restaurants
-    //       const cuisines = restaurants.map((v, i) => restaurants[i].cuisine_type)
-    //       // Remove duplicates from cuisines
-    //       const uniqueCuisines = cuisines.filter((v, i) => cuisines.indexOf(v) == i)
-    //       callback(null, uniqueCuisines);
-    //     }
-    //   });
-    // }
-
-    /**
-     * Restaurant page URL.
-     */
-
   }, {
     key: 'urlForRestaurant',
     value: function urlForRestaurant(restaurant) {
@@ -334,3 +264,4 @@ var DBHelper = function () {
 
   return DBHelper;
 }();
+//# sourceMappingURL=dbhelper.js.map

@@ -79,9 +79,13 @@ var syncInfo = ()=>{
 			  	// console.log(info);
 			  	const cursKey = cursor.key;
 
-			  	fetch('http://localhost:1337/reviews/', {method: 'POST', 
-	        		body: info}
-        		).then((response)=>{
+			  	fetch('http://localhost:1337/reviews/', {
+			  		method: 'POST', 
+	        		body: info,
+	        		headers: {
+	        			'content-type': 'application/json'
+	        		}
+	        	}).then((response)=>{
         			if(response)
         				return response.json();
         			else 

@@ -33,12 +33,15 @@ var allResturnats = function allResturnats(callback) {
 		tx.oncomplete = function () {
 			db.close();
 		};
-		callback(null, data);
+		data.onsuccess = function (event) {
+			callback(null, event.target.result);
+		};
+		// callback(null, data);
 		// return data;
 	};
 };
 
-function resturantByID(id) {
+function resturantByID(id, callback) {
 	var open = getIDBObject();
 
 	open.onsuccess = function () {
@@ -46,10 +49,13 @@ function resturantByID(id) {
 		var tx = db.transaction(objectStoreName);
 		var store = tx.objectStore(objectStoreName);
 		var data = store.get(id);
+		// callback(null, data);
+		data.onsuccess = function (event) {
+			callback(null, event.target.result);
+		};
 		tx.oncomplete = function () {
 			db.close();
 		};
-		return data;
 	};
 }
 
@@ -95,7 +101,6 @@ var addResturant = function addResturant(id, restJson) {
 		tx.oncomplete = function () {
 			db.close();
 		};
-		return;
 	};
 };
 
@@ -109,7 +114,6 @@ var addResturantReviews = function addResturantReviews(id, restReviewsJson) {
 		tx.oncomplete = function () {
 			db.close();
 		};
-		return;
 	};
 };
 
@@ -124,7 +128,6 @@ var addToSyncListReviews = function addToSyncListReviews(data) {
 		tx.oncomplete = function () {
 			db.close();
 		};
-		return;
 	};
 };
 
@@ -146,25 +149,3 @@ var getAllPendingReviews = function getAllPendingReviews(resturantID, callback) 
 		};
 	};
 };
-
-// var removeResturantReviews = (resId)=>{
-// 	let open = getIDBObject();
-// 	open.onsuccess = ()=>{
-// 		var db = open.result;
-// 		var tx = db.transaction(objectStoreName, 'readwrite');
-// 		var store = tx.objectStore(objectStoreName);
-// 		let req = store.delete(resturantReviewsPrefix + resId);
-
-// 		req.onsuccess = (event)=>{
-// 			console.log('resturant ' + resId + ' reviews removed successfully from IDB..');
-// 		}
-
-// 		req.onerror = (event)=>{
-// 			console.error( 'ERROR during removeResturantReviews: ' , evt.target.errorCode);
-// 		}
-// 		tx.oncomplete = function() {
-// 	        db.close();
-// 	    };
-// 		return;
-// 	}
-// }
