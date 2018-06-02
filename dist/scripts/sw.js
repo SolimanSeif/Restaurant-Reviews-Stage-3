@@ -9,9 +9,13 @@ if ('serviceWorker' in navigator) {
 		console.log(error);
 	});
 
-	navigator.serviceWorker.ready.then(function (swRegistration) {
-		return swRegistration.sync.register('myFirstSync');
-	});
+	// navigator.serviceWorker.ready.then(function(swRegistration) {
+	//   return swRegistration.sync.register('myFirstSync');
+	// }).catch(()=>{
+	// 	// system was unable to register for a sync,
+	//    	// this could be an OS-level restriction
+
+	// });
 } else {
 	console.log('browser doesnt support service worker..');
 }

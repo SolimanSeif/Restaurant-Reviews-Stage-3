@@ -18,7 +18,7 @@ document.addEventListener('DOMContentLoaded', function (event) {
 
 var fillSearchingCriteria = function fillSearchingCriteria() {
   if (window.Worker) {
-    DBHelper.fetchRestaurants(function (error, restaurants) {
+    DBHelper.fetchRestaurants(undefined, function (error, restaurants) {
       self.restaurants = restaurants;
       var searchWorker = new Worker('scripts/workers/searchCriteriaWorker.js');
       searchWorker.postMessage({ 'restaurants': self.restaurants });
@@ -44,6 +44,19 @@ var fillSearchingCriteria = function fillSearchingCriteria() {
   }
 };
 
+/**
+ * Fetch all neighborhoods and set their HTML.
+ */
+// var fetchNeighborhoods = () => {
+//   DBHelper.fetchNeighborhoods((error, neighborhoods) => {
+//     if (error) { // Got an error
+//       console.error(error);
+//     } else {
+//       self.neighborhoods = neighborhoods;
+//       fillNeighborhoodsHTML();
+//     }
+//   });
+// }
 
 /**
  * Set neighborhoods HTML.
@@ -60,6 +73,19 @@ var fillNeighborhoodsHTML = function fillNeighborhoodsHTML() {
   });
 };
 
+/**
+ * Fetch all cuisines and set their HTML.
+ */
+// var fetchCuisines = () => {
+//   DBHelper.fetchCuisines((error, cuisines) => {
+//     if (error) { // Got an error!
+//       console.error(error);
+//     } else {
+//       self.cuisines = cuisines;
+//       fillCuisinesHTML();
+//     }
+//   });
+// }
 
 /**
  * Set cuisines HTML.
@@ -105,6 +131,7 @@ var updateRestaurants = function updateRestaurants() {
 
   var cuisine = cSelect[cIndex].value;
   var neighborhood = nSelect[nIndex].value;
+  var favoriteURLCondition = isFavoritSearchRequired();
 
   if (window.Worker) {
     var resturantSearchWorker = new Worker('scripts/workers/resturantSearchWorker.js');
@@ -112,13 +139,15 @@ var updateRestaurants = function updateRestaurants() {
       resturantSearchWorker.postMessage({
         'restaurants': self.restaurants,
         'cuisine': cuisine,
-        'neighborhood': neighborhood });
+        'neighborhood': neighborhood,
+        'favoriteURLCondition': favoriteURLCondition });
     } else {
-      DBHelper.fetchRestaurants(function (error, restaurants) {
+      DBHelper.fetchRestaurants(favoriteURLCondition, function (error, restaurants) {
         resturantSearchWorker.postMessage({
           'restaurants': restaurants,
           'cuisine': cuisine,
-          'neighborhood': neighborhood });
+          'neighborhood': neighborhood,
+          'favoriteURLCondition': favoriteURLCondition });
       });
     }
     resturantSearchWorker.onmessage = function (message) {
@@ -136,7 +165,7 @@ var updateRestaurants = function updateRestaurants() {
       }
     };
   } else {
-    DBHelper.fetchRestaurantByCuisineAndNeighborhood(cuisine, neighborhood, function (error, restaurants) {
+    DBHelper.fetchRestaurantByCuisineAndNeighborhood(cuisine, neighborhood, favoriteURLCondition, function (error, restaurants) {
       if (error) {
         // Got an error!
         console.error(error);
@@ -146,6 +175,23 @@ var updateRestaurants = function updateRestaurants() {
       }
     });
   }
+};
+
+var isFavoritSearchRequired = function isFavoritSearchRequired() {
+  var favList = document.getElementsByName('favoriteSearch');
+  var filter = 'all'; // Favorite  unFavorite
+  for (var i = 0; i < favList.length; i++) {
+    if (favList[i].checked) {
+      filter = favList[i].value;
+      break;
+    }
+  }
+  var filterCondition = undefined;
+  if (filter != 'all') {
+    filterCondition = filter; // true or false
+  }
+
+  return filterCondition;
 };
 
 /**
@@ -172,8 +218,10 @@ var fillRestaurantsHTML = function fillRestaurantsHTML() {
   var restaurants = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : self.restaurants;
 
   var ul = document.getElementById('restaurants-list');
+  var index = 0;
   restaurants.forEach(function (restaurant) {
-    ul.append(createRestaurantHTML(restaurant));
+    ul.append(createRestaurantHTML(restaurant, index));
+    index++;
   });
   addMarkersToMap();
   configureIntersectionObserver();
@@ -182,7 +230,7 @@ var fillRestaurantsHTML = function fillRestaurantsHTML() {
 /**
  * Create restaurant HTML.
  */
-var createRestaurantHTML = function createRestaurantHTML(restaurant) {
+var createRestaurantHTML = function createRestaurantHTML(restaurant, index) {
   var li = document.createElement('div');
 
   // TODO chage it to picture
@@ -216,6 +264,18 @@ var createRestaurantHTML = function createRestaurantHTML(restaurant) {
 
   var name = document.createElement('h2');
   name.innerHTML = restaurant.name;
+
+  var heartClass = 'fontawesome-heart-empty';
+  if (restaurant.is_favorite === true || restaurant.is_favorite === 'true') {
+    heartClass = 'fontawesome-heart';
+  }
+  var favSpan = document.createElement('button');
+  favSpan.id = '' + CONST_FAVORITIFY_ACTION_SPAN_ID_PREFIX + restaurant.id;
+  favSpan.className = heartClass;
+  favSpan.setAttribute('onclick', 'markRestaurantAsFavorit(' + restaurant.id + ', ' + restaurant.is_favorite + ', ' + index + ')');
+  favSpan.setAttribute('role', 'presentation');
+  favSpan.setAttribute('aria-label', 'Add to Favorite');
+  name.appendChild(favSpan);
   li.append(name);
 
   var neighborhood = document.createElement('p');

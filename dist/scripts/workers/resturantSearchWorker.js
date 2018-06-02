@@ -6,6 +6,7 @@ self.onmessage = function (message) {
   var restaurants = message.data.restaurants;
   var cuisine = message.data.cuisine;
   var neighborhood = message.data.neighborhood;
+  var favoriteURLCondition = message.data.favoriteURLCondition;
 
   if (cuisine != 'all') {
     // filter by cuisine
@@ -20,46 +21,42 @@ self.onmessage = function (message) {
     });
   }
 
-  postMessage({ 'id': 1, 'restaurants': restaurants });
+  if (favoriteURLCondition) {
+    restaurants = restaurants.filter(function (r) {
+      return r.is_favorite == favoriteURLCondition || r.is_favorite == false && favoriteURLCondition === 'false' || r.is_favorite == true && favoriteURLCondition === 'true';
+    });
+  }
 
+  postMessage({ 'id': 1, 'restaurants': restaurants });
+  var index = 0;
   var resturantsHTML = '';
   restaurants.forEach(function (restaurant) {
-    resturantsHTML = resturantsHTML + generateRestaurantHTML(restaurant);
+    resturantsHTML = resturantsHTML + generateRestaurantHTML(restaurant, index);
+    index++;
   });
   postMessage({ 'id': 2, 'resturantsHTML': resturantsHTML });
 };
 
-var generateRestaurantHTML = function generateRestaurantHTML(restaurant) {
+var generateRestaurantHTML = function generateRestaurantHTML(restaurant, index) {
 
   var imgsList = DBHelper.imagesUrlForRestaurant(restaurant);
 
   var picture = '<picture class="js-lazy-image">';
-  // picture.className = 'js-lazy-image';
-  // picture.display = 'none';
   var img1 = '<source media="(min-width: 1500px)" class="restaurant-img" srcset="' + imgsList[1] + '">';
   var img2 = '<source media="(min-width: 800px)" class="restaurant-img" srcset="' + imgsList[2] + '">';
-  // img1.media = '(min-width: 1500px)';
-  // img1.className = 'restaurant-img';
-  // img1.srcset = imgsList[1];
 
-  // picture.append(img1);
-
-
-  // const img2 = document.createElement('source');
-  // img2.media = '(min-width: 800px)';
-  // img2.className = 'restaurant-img';
-  // img2.srcset = imgsList[2];
-  // picture.append(img2);
   var alt = restaurant.name + ' restaurant , provide ' + restaurant.cuisine_type + ', Located in ' + restaurant.address;
   var img = '<img alt="' + alt + '" data-src="' + imgsList[3] + '" class="restaurant-img" >';
-
-  // img.setAttribute('data-src', imgsList[3]);
-  // img.className = 'restaurant-img';
   picture = picture + img1 + img2 + img + '</picture>';
 
-  var name = '<h2>' + restaurant.name + '</h2>';
-  // name.innerHTML = restaurant.name;
-  // li.append(name);
+  var heartClass = 'fontawesome-heart-empty';
+  if (restaurant.is_favorite === true || restaurant.is_favorite === 'true') {
+    heartClass = 'fontawesome-heart';
+  }
+
+  var favButton = '<button id="FavoritMark_' + restaurant.id + '" class="' + heartClass + ' favoriteButton" onclick="markRestaurantAsFavorit(' + restaurant.id + ', ' + restaurant.is_favorite + ', ' + index + ')" role="presentation" aria-label="Add to Favorite"></button>';
+
+  var name = '<h2>' + restaurant.name + favButton + '</h2>';
 
   var neighborhood = '<p>' + restaurant.neighborhood + '</p>';
   // neighborhood.innerHTML = restaurant.neighborhood;

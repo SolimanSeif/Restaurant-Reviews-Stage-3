@@ -20,22 +20,17 @@ var generateReviewHTML = function generateReviewHTML(review) {
 	var date = '<p2>' + createDate.toDateString() + '</p2>';
 
 	var head = '<h4 class="reviewHead">' + name + date + '</h4>';
-	// head.appendChild(name);
-	// head.appendChild(date);
-	// head.className = 'reviewHead';
-	// li.appendChild(head);
 
 	var rating = '<p3 class="reviewRate ' + getRatingClassName(review.rating) + '">Rating: ' + review.rating + '</p3>';
-	// rating.innerHTML = `Rating: ${review.rating}`; 
-	// rating.className = 'reviewRate ' + getRatingClassName(review.rating);
-	// li.appendChild(rating);
 
 	var comments = '<p>' + review.comments + '</p>';
-	// comments.innerHTML = review.comments;
-	// li.appendChild(comments);
 
+	var editButton = '<button class="reviewActionButton" onclick="editExistingReview(' + review.id + ')" role="presentation" aria-label="Edit Review"><span class="fontawesome-edit">Edit</span></button>';
+	var deleteButton = '<button class="reviewActionButton" onclick="deleteReviewAction(' + review.id + ')" role="presentation" aria-label="Delete Review"><span class="fontawesome-cut">Delete</span></button>';
 
-	var li = '<div>' + head + rating + comments + '</div>';
+	// let editDiv = `<div class="reviewActionsDiv" role="form">${editButton}${deleteButton}</div>`;
+
+	var li = '<div id="review_' + review.id + '">' + head + rating + deleteButton + editButton + comments + '</div>';
 	return li;
 };
 
