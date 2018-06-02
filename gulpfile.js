@@ -6,7 +6,12 @@ const del = require('del');
 const wiredep = require('wiredep').stream;
 const runSequence = require('run-sequence');
 const eslint = require('gulp-eslint');
-const gzip = require('gulp-gzip');
+// const gzip = require('gulp-gzip');
+let cleanCSS = require('gulp-clean-css');
+var minify = require('gulp-minify');
+
+let babel = require('gulp-babel');
+var uglify = require('gulp-uglify');
 
 const $ = gulpLoadPlugins();
 const reload = browserSync.reload;
@@ -15,6 +20,11 @@ let dev = true;
 
 gulp.task('styles', () => {
   return gulp.src('app/styles/*.scss')
+    // TODO production only
+    
+    .pipe(cleanCSS({compatibility: 'ie8'}))
+    .pipe(minify({}))
+    
     .pipe($.plumber())
     .pipe($.if(dev, $.sourcemaps.init()))
     .pipe($.sass.sync({
@@ -25,17 +35,21 @@ gulp.task('styles', () => {
     .pipe($.autoprefixer({browsers: ['> 1%', 'last 2 versions', 'Firefox ESR']}))
     .pipe($.if(dev, $.sourcemaps.write()))
     .pipe(gulp.dest('.tmp/styles'))
-    // .pipe(gulp.dest('dist/styles'))
     .pipe(reload({stream: true}));
 });
 
 gulp.task('scripts', () => {
   return gulp.src('app/scripts/**/*.js')
+    // TODO production only
+    
+    .pipe(babel({
+      presets: ['es2015']}))
+    .pipe(uglify())
+    
     .pipe($.plumber())
     .pipe($.if(dev, $.sourcemaps.init()))
     .pipe($.babel())
     .pipe($.if(dev, $.sourcemaps.write('.')))
-    // .pipe(gzip({ preExtension: 'min', append: false }))
     .pipe(gulp.dest('.tmp/scripts'))
     .pipe(reload({stream: true}));
 });
