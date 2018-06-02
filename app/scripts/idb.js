@@ -4,9 +4,16 @@ const version = 1;
 
 const allRestKey = 'allResturnats';
 const resturantReviewsPrefix = 'ReviewsRestuarant_';
+const restaurantSingReviewPrefix = 'Review_';
 
 const syncObjectStoreName = 'syncRequests';
-var syncReviewsCount = 0;
+var syncCreateNewRestaurantReviewCount = 0;
+var syncFavoriteRestaurantCount = 10000;
+var syncUnfavoriteRestaurantCount = 20000;
+var syncUpdateRestaurantReviewCount = 30000;
+var syncDeleteRestaurantReviewCount = 40000;
+var syncOperationIndex = 0;
+
 
 var getIDBObject =() => {
 	var indexedDB = window.indexedDB || window.mozIndexedDB || window.webkitIndexedDB || window.msIndexedDB || window.shimIndexedDB;
@@ -31,14 +38,17 @@ var allResturnats = (callback) => {
     	tx.oncomplete = function() {
 	        db.close();
 	    };
-	    callback(null, data);
+	    data.onsuccess =(event)=>{
+    		callback(null ,event.target.result);
+    	}
+	    // callback(null, data);
     	// return data;
 	};
 
 }
 
 
-function resturantByID(id){
+function resturantByID(id, callback){
 	let open = getIDBObject();
 
 	open.onsuccess = ()=>{
@@ -46,14 +56,17 @@ function resturantByID(id){
     	var tx = db.transaction(objectStoreName);
     	var store = tx.objectStore(objectStoreName);
     	var data = store.get(id);
+    	// callback(null, data);
+    	data.onsuccess =(event)=>{
+    		callback(null ,event.target.result);
+    	}
     	tx.oncomplete = function() {
 	        db.close();
 	    };
-    	return data;
 	};
 }
 
-function resturantReviews(id, callback){
+function resturantReviews(id, callback, count=-1){
 	let open = getIDBObject();
 
 	open.onsuccess = ()=>{
@@ -61,6 +74,9 @@ function resturantReviews(id, callback){
     	var tx = db.transaction(objectStoreName);
     	var store = tx.objectStore(objectStoreName);
     	let k = resturantReviewsPrefix + id;
+    	if(k === 1){
+    		k = restaurantSingReviewPrefix + id;
+    	}
     	var data = store.get(k);
     	data.onsuccess =(event)=>{
     		callback(null ,event.target.result);
@@ -96,36 +112,62 @@ var addResturant = (id, restJson) =>{
 		tx.oncomplete = function() {
 	        db.close();
 	    };
-		return;
 	}
 }
 
-var addResturantReviews = (id, restReviewsJson) =>{
+var addResturantReviews = (id, restReviewsJson, count=-1) =>{
 	let open = getIDBObject();
 	open.onsuccess = ()=>{
 		var db = open.result;
 		var tx = db.transaction(objectStoreName, 'readwrite');
 		var store = tx.objectStore(objectStoreName);
-		store.put(restReviewsJson, resturantReviewsPrefix+id);
+		let key = resturantReviewsPrefix+id;
+		if(count === 1){
+			key = restaurantSingReviewPrefix + id;
+		}
+		store.put(restReviewsJson, key);
 		tx.oncomplete = function() {
 	        db.close();
 	    };
-		return;
 	}
 }
 
-var addToSyncListReviews = (data)=>{
+
+var addToSyncListReviews = (data, category)=>{
 	let open = getIDBObject();
 	open.onsuccess = ()=>{
 		var db = open.result;
 		var tx = db.transaction(syncObjectStoreName, 'readwrite');
 		var store = tx.objectStore(syncObjectStoreName);
-		store.put(data, syncReviewsCount);
-		syncReviewsCount++;
+		let syncData = {'data': data, 'category': -1};
+		if(category === 'NewReview'){
+			syncData.category = syncCreateNewRestaurantReviewCount;
+			// store.put(data, syncCreateNewRestaurantReviewCount);
+			// syncCreateNewRestaurantReviewCount++;
+		}else if(category === 'DeleteReview'){
+			syncData.category = syncDeleteRestaurantReviewCount;
+
+			// store.put(data, syncDeleteRestaurantReviewCount);
+			// syncDeleteRestaurantReviewCount++;
+		}else if(category === 'UpdateReview'){
+			syncData.category = syncUpdateRestaurantReviewCount;
+			// store.put(data, syncUpdateRestaurantReviewCount);
+			// syncUpdateRestaurantReviewCount++;
+		}else if(category === 'Favorite'){
+			syncData.category = syncFavoriteRestaurantCount;
+			// store.put(data, syncFavoriteRestaurantCount);
+			// syncFavoriteRestaurantCount++;
+		}else if(category === 'unFavorite'){
+			syncData.category = syncUnfavoriteRestaurantCount;
+			// store.put(data, syncUnfavoriteRestaurantCount);
+			// syncUnfavoriteRestaurantCount++;
+		}
+		store.put(syncData, syncOperationIndex);
+		syncOperationIndex++;
+
 		tx.oncomplete = function() {
 	        db.close();
 	    };
-		return;
 	}
 }
 
@@ -139,8 +181,8 @@ var getAllPendingReviews = (resturantID, callback)=>{
 		store.openCursor().onsuccess = function(event) {
   			var cursor = event.target.result;
   			if (cursor) {
-			    let rev = cursor.value;
-			    if(rev.restaurant_id === resturantID){
+			    let rev = cursor.value.data;
+			    if(rev.restaurant_id === resturantID && cursor.value.category < syncFavoriteRestaurantCount){
 			    	callback(rev);
 			    }
 			    cursor.continue();
@@ -149,24 +191,59 @@ var getAllPendingReviews = (resturantID, callback)=>{
 	}
 }
 
-// var removeResturantReviews = (resId)=>{
-// 	let open = getIDBObject();
-// 	open.onsuccess = ()=>{
-// 		var db = open.result;
-// 		var tx = db.transaction(objectStoreName, 'readwrite');
-// 		var store = tx.objectStore(objectStoreName);
-// 		let req = store.delete(resturantReviewsPrefix + resId);
+var iterateSyncIDB = (callback)=>{
+	var open = getIDBObject();
+	open.onsuccess = ()=>{
+		var db = open.result;
+		var tx = db.transaction(syncObjectStoreName);
+		var store = tx.objectStore(syncObjectStoreName);
 
-// 		req.onsuccess = (event)=>{
-// 			console.log('resturant ' + resId + ' reviews removed successfully from IDB..');
-// 		}
+		store.openCursor().onsuccess = function(event) {
+			var cursor = event.target.result;
+			if (cursor) {
+			  	const info = cursor.value.data;
+			  	const category = cursor.value.category;
+			  	const cursKey = cursor.key;
 
-// 		req.onerror = (event)=>{
-// 			console.error( 'ERROR during removeResturantReviews: ' , evt.target.errorCode);
-// 		}
-// 		tx.oncomplete = function() {
-// 	        db.close();
-// 	    };
-// 		return;
-// 	}
-// }
+			  	callback(cursKey, info, category);
+
+			  	cursor.continue();
+			}
+		}
+	}
+}
+
+var removeFromSyncIDB = (id)=>{
+	var open = getIDBObject();
+	open.onsuccess = ()=>{
+		var db = open.result;
+		var tx = db.transaction(syncObjectStoreName, 'readwrite');
+		var store = tx.objectStore(syncObjectStoreName);
+		store.delete(id);
+		tx.oncomplete = function() {
+	        db.close();
+	    };
+	}
+}
+
+var removeResturantReviews = (resId)=>{
+	let open = getIDBObject();
+	open.onsuccess = ()=>{
+		var db = open.result;
+		var tx = db.transaction(objectStoreName, 'readwrite');
+		var store = tx.objectStore(objectStoreName);
+		let req = store.delete(resturantReviewsPrefix + resId);
+
+		req.onsuccess = (event)=>{
+			console.log('resturant ' + resId + ' reviews removed successfully from IDB..');
+		}
+
+		req.onerror = (event)=>{
+			console.error( 'ERROR during removeResturantReviews: ' , evt.target.errorCode);
+		}
+		tx.oncomplete = function() {
+	        db.close();
+	    };
+		return;
+	}
+}

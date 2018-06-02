@@ -33,6 +33,10 @@
 		margin-left: 2%;
 		width: 40%;
 	}
+	.searchFavoriteDiv, .searchButton, .favoriteRadio{
+		margin-left: 0%;
+		font-size: 8pt;
+	}
 }
 
 @media screen and (min-width: 361px){
@@ -58,5 +62,39 @@
 	}
 }
 
+.searchFavoriteDiv, .searchButton, .favoriteRadio{
+	margin-left: 3%;
+	font-family: Arial, Helvetica, sans-serif;
+	font-size: 10pt; 
+}
 
+.searchFavoriteDiv{
+	color: white;
+}
 
+.searchButton{
+	font-weight: bold;
+}
+
+.favoriteButton{
+	color: #8A4500;
+}
+
+[class*="fontawesome-"]:before {
+  /*color: #8A4500;*/
+  display: inline-block;
+  font-family: 'fontawesome', sans-serif;
+  text-shadow: 3px 3px 3px #aaa;
+  width: 2em;
+
+}
+
+a:hover [class*="fontawesome-"]:before {
+  color: #3d85c6;
+}
+
+[class*="fontawesome-"]{
+	background: none;
+	border: none;
+	font-size: inherit;
+}

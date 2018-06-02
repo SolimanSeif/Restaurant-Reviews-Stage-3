@@ -17,13 +17,13 @@ class DBHelper {
   static get DATABASE_URL() {
     const port = 8000 // Change this to your server port
     // return `http://localhost:${port}/data/restaurants.json`;
-    return 'http://localhost:1337/restaurants';
+    return 'http://localhost:1337/restaurants/';
   }
 
   /**
    * Fetch all restaurants.
    */
-  static fetchRestaurants(callback) {
+  static fetchRestaurants(isFavorit, callback) {
     // let xhr = new XMLHttpRequest();
     // xhr.open('GET', DBHelper.DATABASE_URL);
     // xhr.onload = () => {
@@ -53,9 +53,12 @@ class DBHelper {
     //     callback(null, resJson);
     //   });
     // }
-    
-    
-      fetch(DBHelper.DATABASE_URL).then(response =>{
+      let url = DBHelper.DATABASE_URL;
+      if(isFavorit){
+        url = url + `?is_favorite=${isFavorit}`;
+      }
+
+      fetch(url).then(response =>{
         if(response){
           return response.json();
         }else{
@@ -63,11 +66,15 @@ class DBHelper {
         }
       }).then(resJson => {
         if(resJson){
+          if(callback){
+            callback(null, resJson);
+          }
           addAllResturants(resJson);
-          callback(null, resJson);
         }
       }).catch(error =>{
-        allResturnats(callback);
+        if(callback){
+          allResturnats(callback);
+        }
       });
     
 
@@ -78,47 +85,83 @@ class DBHelper {
    */
   static fetchRestaurantById(id, callback) {
     // fetch all restaurants with proper error handling.
-
-    let res = resturantByID(id);
-    if(res){
-      callback(null, res);
-    }else{
+    
       fetch(`http://localhost:1337/restaurants/${id}`).then(obj => {
-        return obj.json();
-      }).then(restaurant =>{
-        if(restaurant === undefined){
-          callback(error, null);
+        if(obj){
+          return obj.json();
         }else{
-          addResturant(id, restaurant);
-          callback(null, restaurant);
+          return undefined;
         }
+      }).then(restaurant =>{
+        if(restaurant){
+          if(callback){ callback(null, restaurant);}
+          addResturant(id, restaurant);
+        }else{
+          if(callback){callback(error, null);}
+        }
+      }).catch((error)=>{
+        if(callback){resturantByID(id, callback);}
       });
-    }
+    
   }
 
   static fetchRestaurantReviews(id, callback, callbackFailedReviews) {
     // fetch all restaurants with proper error handling.
 
-      fetch(`http://localhost:1337/reviews/?restaurant_id=${id}`).then(obj => {
+      fetch(`http://localhost:1337/reviews/?restaurant_id=${id}`, {
+        cache: 'no-cache'
+      }).then(obj => {
         return obj.json();
       }).then(restaurant =>{
         if(restaurant){
-          callback(null, restaurant);
+          if(callback){
+            callback(null, restaurant);
+          }
           addResturantReviews(id, restaurant);
         }
       }).catch(e=>{
         console.log('Error during fetching resturant reviews.. ' + e);
-        resturantReviews(id, callback);
-        getAllPendingReviews(id, callbackFailedReviews);
+        if(callback){
+          resturantReviews(id, callback);
+        }
+        if(callbackFailedReviews){
+          getAllPendingReviews(id, callbackFailedReviews);
+        }
       });
   }
+
+  static fetchSingleReview(reviewID, callback, callbackFailedReviews) {
+    // fetch all restaurants with proper error handling.
+
+      fetch(`http://localhost:1337/reviews/${reviewID}`, {
+        cache: 'no-cache'
+      }).then(obj => {
+        return obj.json();
+      }).then(review =>{
+        if(review){
+          if(callback){
+            callback(null, review);
+          }
+          addResturantReviews(reviewID, review, 1);
+        }
+      }).catch(e=>{
+        console.log('Error during fetching review.. ' + e);
+        if(callback){
+          resturantReviews(id, callback, 1);
+        }
+        // if(callbackFailedReviews){
+        //   getAllPendingReviews(id, callbackFailedReviews);
+        // }
+      });
+  }
+
 
   /**
    * Fetch restaurants by a cuisine type with proper error handling.
    */
   static fetchRestaurantByCuisine(cuisine, callback) {
     // Fetch all restaurants  with proper error handling
-    DBHelper.fetchRestaurants((error, restaurants) => {
+    DBHelper.fetchRestaurants(undefined, (error, restaurants) => {
       if (error) {
         callback(error, null);
       } else {
@@ -134,7 +177,7 @@ class DBHelper {
    */
   static fetchRestaurantByNeighborhood(neighborhood, callback) {
     // Fetch all restaurants
-    DBHelper.fetchRestaurants((error, restaurants) => {
+    DBHelper.fetchRestaurants(undefined, (error, restaurants) => {
       if (error) {
         callback(error, null);
       } else {
@@ -148,9 +191,9 @@ class DBHelper {
   /**
    * Fetch restaurants by a cuisine and a neighborhood with proper error handling.
    */
-  static fetchRestaurantByCuisineAndNeighborhood(cuisine, neighborhood, callback) {
+  static fetchRestaurantByCuisineAndNeighborhood(cuisine, neighborhood, isFavorit, callback) {
     // Fetch all restaurants
-    DBHelper.fetchRestaurants((error, restaurants) => {
+    DBHelper.fetchRestaurants(isFavorit, (error, restaurants) => {
       if (error) {
         callback(error, null);
       } else {
@@ -161,6 +204,7 @@ class DBHelper {
         if (neighborhood != 'all') { // filter by neighborhood
           results = results.filter(r => r.neighborhood == neighborhood);
         }
+
         callback(null, results);
       }
     });
@@ -168,7 +212,7 @@ class DBHelper {
 
 
   static fetchSearchValues(callback){
-    DBHelper.fetchRestaurants((error, restaurants) => {
+    DBHelper.fetchRestaurants(undefined, (error, restaurants) => {
       if (error) {
         callback(error, null);
       } else {

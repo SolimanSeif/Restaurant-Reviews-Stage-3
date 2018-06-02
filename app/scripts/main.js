@@ -17,9 +17,9 @@ document.addEventListener('DOMContentLoaded', (event) => {
 
 var fillSearchingCriteria = ()=>{
   if (window.Worker){
-    DBHelper.fetchRestaurants((error, restaurants)=>{
+    DBHelper.fetchRestaurants(undefined, (error, restaurants)=>{
       self.restaurants = restaurants;
-      let searchWorker = new Worker('scripts/searchCriteriaWorker.js');
+      let searchWorker = new Worker('scripts/workers/searchCriteriaWorker.js');
       searchWorker.postMessage( {'restaurants': self.restaurants} );
       searchWorker.onmessage = (message)=>{
         let cuisinesHTML = message.data.CuisinesHTML;
@@ -126,20 +126,23 @@ var updateRestaurants = () => {
 
   const cuisine = cSelect[cIndex].value;
   const neighborhood = nSelect[nIndex].value;
+  let favoriteURLCondition = isFavoritSearchRequired();
 
   if(window.Worker){
-    let resturantSearchWorker = new Worker('scripts/resturantSearchWorker.js');
+    let resturantSearchWorker = new Worker('scripts/workers/resturantSearchWorker.js');
     if(self.restaurants){
       resturantSearchWorker.postMessage({
         'restaurants': self.restaurants, 
         'cuisine': cuisine,
-        'neighborhood': neighborhood});
+        'neighborhood': neighborhood,
+        'favoriteURLCondition': favoriteURLCondition});
     }else{
-      DBHelper.fetchRestaurants((error, restaurants)=>{
+      DBHelper.fetchRestaurants(favoriteURLCondition, (error, restaurants)=>{
         resturantSearchWorker.postMessage({
         'restaurants': restaurants, 
         'cuisine': cuisine,
-        'neighborhood': neighborhood});
+        'neighborhood': neighborhood,
+        'favoriteURLCondition': favoriteURLCondition});
       });
     }
     resturantSearchWorker.onmessage = (message)=>{
@@ -158,7 +161,7 @@ var updateRestaurants = () => {
     }
 
   }else{
-    DBHelper.fetchRestaurantByCuisineAndNeighborhood(cuisine, neighborhood, (error, restaurants) => {
+    DBHelper.fetchRestaurantByCuisineAndNeighborhood(cuisine, neighborhood, favoriteURLCondition, (error, restaurants) => {
       if (error) { // Got an error!
         console.error(error);
       } else {
@@ -167,6 +170,24 @@ var updateRestaurants = () => {
       }
     })
   }
+}
+
+
+var isFavoritSearchRequired =()=>{
+  let favList = document.getElementsByName('favoriteSearch');
+  let filter = 'all'; // Favorite  unFavorite
+  for(let i = 0  ; i < favList.length ;i++){
+    if(favList[i].checked){
+      filter= favList[i].value;
+      break;
+    }
+  }
+  let filterCondition = undefined;
+  if(filter != 'all'){
+    filterCondition = filter; // true or false
+  }
+
+  return filterCondition;
 }
 
 /**
@@ -189,8 +210,10 @@ var resetRestaurants = (restaurants) => {
  */
 var fillRestaurantsHTML = (restaurants = self.restaurants) => {
   const ul = document.getElementById('restaurants-list');
+  let index = 0;
   restaurants.forEach(restaurant => {
-    ul.append(createRestaurantHTML(restaurant));
+    ul.append(createRestaurantHTML(restaurant, index));
+    index++;
   });
   addMarkersToMap();
   configureIntersectionObserver();
@@ -199,7 +222,7 @@ var fillRestaurantsHTML = (restaurants = self.restaurants) => {
 /**
  * Create restaurant HTML.
  */
-var createRestaurantHTML = (restaurant) => {
+var createRestaurantHTML = (restaurant, index) => {
   const li = document.createElement('div');
 
   // TODO chage it to picture
@@ -233,6 +256,18 @@ var createRestaurantHTML = (restaurant) => {
 
   const name = document.createElement('h2');
   name.innerHTML = restaurant.name;
+
+  let heartClass = 'fontawesome-heart-empty';
+  if(restaurant.is_favorite === true || restaurant.is_favorite === 'true'){
+    heartClass = 'fontawesome-heart';
+  }
+  let favSpan = document.createElement('button');
+  favSpan.id = `${CONST_FAVORITIFY_ACTION_SPAN_ID_PREFIX}${restaurant.id}`;
+  favSpan.className = heartClass;
+  favSpan.setAttribute('onclick',`markRestaurantAsFavorit(${restaurant.id}, ${restaurant.is_favorite}, ${index})`);
+  favSpan.setAttribute('role', 'presentation');
+  favSpan.setAttribute('aria-label', 'Add to Favorite');
+  name.appendChild(favSpan);
   li.append(name);
 
   const neighborhood = document.createElement('p');
@@ -386,7 +421,5 @@ function applyImage(img, src) {
   img.src = src;
   // img.classList.add('fade-in');
 }
-
-
 
 
