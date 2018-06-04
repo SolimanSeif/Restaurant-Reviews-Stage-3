@@ -75,17 +75,17 @@ var markRestaurantAsFavorit = (restaurantID, is_favorite, index)=>{
   	}else{
   		span.className = 'fontawesome-heart-empty';
   	}
+    span.style.color = '#8a4500';
   	span.setAttribute('onclick',`markRestaurantAsFavorit(${restaurantID}, ${!is_favorite}, ${index})`);
   }
 
   let successCallback = (response)=>{
   	switchSpanIcon();
 
-  	if(index >= 0){ // working from home page
-  		DBHelper.fetchRestaurants(undefined);
-  	}else{
-  		DBHelper.fetchRestaurantById(restaurantID, undefined);
-  	}
+  	
+		DBHelper.fetchRestaurants(undefined);
+		DBHelper.fetchRestaurantById(''+restaurantID, undefined);
+  	
   };
   
   let failCallback= ()=>{
@@ -95,6 +95,24 @@ var markRestaurantAsFavorit = (restaurantID, is_favorite, index)=>{
   	}else{
   		addToSyncListReviews(restaurantID, CATEGORY_MARK_AS_FAVORIT);
   	}
+    //TODO update the index DB
+    allResturnats((error, restList)=>{
+      if(restList){
+        for(let i = 0 ; i < restList.length ; i++){
+          if(restList[i].id === restaurantID){
+            restList[i].is_favorite = !is_favorite;
+            addAllResturants(restList);
+            break;
+          }
+        }
+      }
+    });
+    resturantByID(''+restaurantID, (error, restaurant)=>{
+      if(restaurant){
+        restaurant.is_favorite = !is_favorite;
+        addResturant(''+restaurantID, restaurant);
+      }
+    });
   };
 
   favoriteRestaurant(restaurantID, !is_favorite, successCallback, failCallback);

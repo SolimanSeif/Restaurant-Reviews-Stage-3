@@ -8,11 +8,14 @@ const CATEGORY_DELETE_REVIEW = 'DeleteReview';
 const CATEGORY_UPDATE_REVIEW = 'UpdateReview';
 
 var originalModifiedReviewsInnerHTML = new Map();
+var notSubmittedReviews = new Map();
 const EDIT_REVIEW_NAME_ID_PREFIX = 'edit_review_name_';
 const EDIT_REVIEW_RATING_ID_PREFIX = 'edit_review_rating_';
 const EDIT_REVIEW_COMM_ID_PREFIX = 'edit_review_comm_';
 const EDIT_REVIEW_RADIO_NAME_PREF = '_rating_';
 const SINGLE_REVIEW_DIV_PREFIX = 'review_';
+
+const NOT_SUBMITTED_REVIEW_DIV_PREFIX= 'notSubmittedReviewDiv_';
 /**
  * Initialize Google map, called from HTML.
  */
@@ -47,25 +50,35 @@ var fetchRestaurantFromURL = (callback) => {
     error = 'No restaurant id in URL'
     callback(error, null);
   } else {
-    DBHelper.fetchRestaurantById(id, (error, restaurant) => {
-      self.restaurant = restaurant;
-      if (!restaurant) {
-        console.error(error);
-        return;
+    // from DB first
+    resturantByID(id,(error,rest)=>{
+      if(rest){
+        self.restaurant = rest;
+        fillRestaurantHTML();
+        callback(null, restaurant);
+      }else{
+        DBHelper.fetchRestaurantById(id, (error, restaurant) => {
+          self.restaurant = restaurant;
+          if (!restaurant) {
+            console.error(error);
+            return;
+          }
+          fillRestaurantHTML();
+          callback(null, restaurant);
+        });
       }
-      fillRestaurantHTML();
-      callback(null, restaurant)
     });
+    
 
-    DBHelper.fetchRestaurantReviews(id, 
-    //   (error, reviews) => {
-    //   if (!reviews) {
-    //     console.error(error);
-    //     return;
-    //   }
-    //   fillReviewsHTML(reviews);
-    // }
-    fillReviewsHTML, afterSubmittingReviewFail);
+    resturantReviews(id,(error, reviews)=>{
+      if(reviews){
+        self.reviews = reviews;
+        fillReviewsHTML(undefined, reviews);
+        getAllPendingReviews(id, afterSubmittingReviewFail);
+      }else{
+        DBHelper.fetchRestaurantReviews(id, fillReviewsHTML, afterSubmittingReviewFail);
+      }
+    });
   }
 }
 
@@ -149,7 +162,7 @@ var fillRestaurantHoursHTML = (operatingHours = self.restaurant.operating_hours)
 /**
  * Create all reviews HTML and add them to the webpage.
  */
-var fillReviewsHTML = (error ,reviews = self.restaurant.reviews) => {
+var fillReviewsHTML = (error ,reviews = self.restaurantReviewsList) => {
   const container = document.getElementById('reviews-container');
   // const title = document.createElement('h3');
   // title.innerHTML = 'Reviews';
@@ -174,7 +187,9 @@ var fillReviewsHTML = (error ,reviews = self.restaurant.reviews) => {
     }else{
 
       reviews.forEach(review => {
-        ul.appendChild(createReviewHTML(review));
+        if(review){
+          ul.appendChild(createReviewHTML(review));
+        }
       });
       container.appendChild(ul);
     }
@@ -186,41 +201,60 @@ var fillReviewsHTML = (error ,reviews = self.restaurant.reviews) => {
  */
 var createReviewHTML = (review, li = document.createElement('div')) => {
   // const li = document.createElement('div');
+  li.id= `${SINGLE_REVIEW_DIV_PREFIX}${review.id}`;
+//   const name = document.createElement('p1');
+//   name.innerHTML = review.name;
+// //  li.appendChild(name);
+
+//   const date = document.createElement('p2');
+//   // date.innerHTML = review.date;
+// //  li.appendChild(date);
+//   let createDate = new Date(review.createdAt);
+//   date.innerHTML = createDate.toDateString();
+
+//   const head = document.createElement('h4');
+//   head.appendChild(name);
+//   head.appendChild(date);
+//   head.className = 'reviewHead';
+//   li.appendChild(head);
   
-  const name = document.createElement('p1');
-  name.innerHTML = review.name;
-//  li.appendChild(name);
-
-  const date = document.createElement('p2');
-  // date.innerHTML = review.date;
-//  li.appendChild(date);
-  let createDate = new Date(review.createdAt);
-  date.innerHTML = createDate.toDateString();
-
-  const head = document.createElement('h4');
-  head.appendChild(name);
-  head.appendChild(date);
-  head.className = 'reviewHead';
-  li.appendChild(head);
-  
-  const rating = document.createElement('p3');
-  rating.innerHTML = `Rating: ${review.rating}`; 
-	rating.className = 'reviewRate ' + getRatingClassName(review.rating);
-  li.appendChild(rating);
-
-  createEditAndDeleteButtons(li, review);
-
-  const comments = document.createElement('p');
-  comments.innerHTML = review.comments;
-  li.appendChild(comments);
+//   const rating = document.createElement('p3');
+//   rating.innerHTML = `Rating: ${review.rating}`; 
+// 	rating.className = 'reviewRate ' + getRatingClassName(review.rating);
+//   li.appendChild(rating);
+  createReviewHeaderSection(li, review);
+  createEditAndDeleteButtons(li, review, `editExistingReview(${review.id})`, `deleteReviewAction(${review.id})`);
+  createReviewCommentSection(li, review);
+  // const comments = document.createElement('p');
+  // comments.innerHTML = review.comments;
+  // li.appendChild(comments);
 
   return li;
 }
 
+var createReviewHeaderSection=(div, review)=>{
+  let name = document.createElement('p1');
+  name.innerHTML = review.name;
 
-var createEditAndDeleteButtons=(div, review)=>{
+  let date = document.createElement('p2');
+  let createDate = new Date(review.createdAt);
+  date.innerHTML = createDate.toDateString();
+
+  let head = document.createElement('h4');
+  head.appendChild(name);
+  head.appendChild(date);
+  head.className = 'reviewHead';
+  div.appendChild(head);
+  
+  let rating = document.createElement('p3');
+  rating.innerHTML = `Rating: ${review.rating}`; 
+  rating.className = 'reviewRate ' + getRatingClassName(review.rating);
+  div.appendChild(rating);
+}
+
+var createEditAndDeleteButtons=(div, review, editOnClickAction, deleteOnClickAction)=>{
   let bt1 = document.createElement('button');
-  bt1.setAttribute('onclick', `editExistingReview(${review.id})`);
+  bt1.setAttribute('onclick', editOnClickAction);
   let spn1 = document.createElement('span');
   spn1.className = 'fontawesome-edit';
   spn1.innerHTML = 'Edit';
@@ -230,7 +264,7 @@ var createEditAndDeleteButtons=(div, review)=>{
   bt1.appendChild(spn1);
 
   let btn2 = document.createElement('button');
-  btn2.setAttribute('onclick',`deleteReviewAction(${review.id})`);
+  btn2.setAttribute('onclick', deleteOnClickAction);
   let spn2 = document.createElement('span');
   spn2.className = 'fontawesome-cut';
   spn2.innerHTML = 'Delete';
@@ -241,6 +275,12 @@ var createEditAndDeleteButtons=(div, review)=>{
 
   div.appendChild(btn2);
   div.appendChild(bt1);
+}
+
+var createReviewCommentSection = (div, review)=>{
+  let comments = document.createElement('p');
+  comments.innerHTML = review.comments;
+  div.appendChild(comments);
 }
 
 var getRatingClassName = (rate) =>{
@@ -369,8 +409,8 @@ var submitUserReviewForm = ()=>{
           afterSubmittingReviewSuccess();
         }else{
           // error 
-          addToSyncListReviews(jsonData, CATEGORY_NEW_REVIEW);
-          afterSubmittingReviewFail(reviewInfo);
+          let syncObj = addToSyncListReviews(jsonData, CATEGORY_NEW_REVIEW);
+          afterSubmittingReviewFail(syncObj.value, syncObj.key, false);
           alert('Your review will be submitted when you go online or the review service running..');
         }
       });
@@ -390,9 +430,26 @@ var afterSubmittingReviewSuccess = ()=>{
   });
 }
 
-var afterSubmittingReviewFail = (review)=>{
-  const ul = document.getElementById('reviews-list');
-  ul.appendChild(createReviewHTML(review));
+var afterSubmittingReviewFail = (review, syncDB_key, isExists= false)=>{
+    let newDiv ;
+  if(!isExists){
+    notSubmittedReviews.set(syncDB_key, review);
+    newDiv = document.createElement('div');
+    newDiv.id = `${SINGLE_REVIEW_DIV_PREFIX}${syncDB_key}`;
+  }else{
+    newDiv = document.getElementById(`${SINGLE_REVIEW_DIV_PREFIX}${syncDB_key}`);
+    newDiv.innerHTML = '';
+  }
+  
+  let rev = JSON.parse(review.data);
+  createReviewHeaderSection(newDiv, rev);
+  createEditAndDeleteButtons(newDiv, rev, `editNotSubmittedReviewAction('${syncDB_key}')`, `deleteNotSubmittedReviewAction('${syncDB_key}')`);
+  createReviewCommentSection(newDiv, rev);
+
+  if(!isExists){
+    const ul = document.getElementById('reviews-list');
+    ul.appendChild(newDiv);
+  }
 }
 
 var clearSubmittedReview = (reviewerName, rating, reviewerComment)=>{
@@ -408,13 +465,27 @@ var clearSubmittedReview = (reviewerName, rating, reviewerComment)=>{
   }
 }
 
+var deleteNotSubmittedReviewAction= (mapKey)=>{
+  let result = window.confirm('Your didnt submitted yet, Confirm to delete it');
+  if(result){
+    removeFromSyncIDB(mapKey);
+    notSubmittedReviews.delete(mapKey);
+    document.getElementById(`${SINGLE_REVIEW_DIV_PREFIX}${mapKey}`).innerHTML = '';
+  }
+}
+
+var editNotSubmittedReviewAction= (mapKey)=>{
+  // TODO
+  createEditReviewSection(mapKey);
+}
+
 
 var deleteReviewAction=(reviewID)=>{
   let result = window.confirm('Confirm to delete');
   if(result){
     console.log('Start deleting action id:' + reviewID);
     let successCallback = ()=>{
-      DBHelper.fetchRestaurantReviews(self.resturantID, 
+      DBHelper.fetchRestaurantReviews(self.resturantID,  
         fillReviewsHTML, undefined);
       customNotification('Review Deleted successfully');
     }
@@ -430,19 +501,20 @@ var deleteReviewAction=(reviewID)=>{
 }
 
 var afterDeletingReviewFailure=(reviewID)=>{
+  let index = getReviewByID(reviewID);
+  if(index && index < restaurantReviewsList.length){
+    restaurantReviewsList[index] = undefined;
+  }
+
   let revDiv = document.getElementById(`${SINGLE_REVIEW_DIV_PREFIX}${reviewID}`);
   revDiv.innerHTML = '';
+  addResturantReviews(resturantID,restaurantReviewsList);
 }
 
 
 var getReviewByID = (id)=>{
-  // for(let rev of restaurantReviewsList){
-  //   if(rev.id === id){
-  //     return rev;
-  //   }
-  // }
   for(let index = 0 ; index < restaurantReviewsList.length ; index++){
-    if(restaurantReviewsList[index].id === id){
+    if(restaurantReviewsList[index] && restaurantReviewsList[index].id === id){
       return index;
     }
   }
@@ -467,12 +539,17 @@ var createEditReviewSection = (reviewID)=>{
   revDev.appendChild(hd);
 
   let index = getReviewByID(reviewID);
-  let review = restaurantReviewsList[index];
+  let review;
+  if(index){
+    review = restaurantReviewsList[index];
+  }else{
+    review = JSON.parse(notSubmittedReviews.get(reviewID).data);
+  }
 
   let name = document.createElement('input');
   name.type = 'text';
   name.value = review.name;
-  name.id = `${EDIT_REVIEW_NAME_ID_PREFIX}${review.id}`;
+  name.id = `${EDIT_REVIEW_NAME_ID_PREFIX}${reviewID}`;
   name.setAttribute('maxlength', 50);
   let nmLbl = document.createElement('label');
   nmLbl.innerHTML = 'Reviewer Name: ';
@@ -482,13 +559,13 @@ var createEditReviewSection = (reviewID)=>{
 
   let rateDiv1 = document.createElement('div');
   rateDiv1.className = 'modifyReviewRating';
-  rateDiv1.id = `${EDIT_REVIEW_RATING_ID_PREFIX}${review.id}`;
+  rateDiv1.id = `${EDIT_REVIEW_RATING_ID_PREFIX}${reviewID}`;
   rateDiv1.setAttribute('name', rateDiv1.id);
-  generateRatingStars(rateDiv1, review.rating, review.id);
+  generateRatingStars(rateDiv1, review.rating, reviewID);
   revDev.appendChild(rateDiv1);
 
   let comm = document.createElement('textarea');
-  comm.id = `${EDIT_REVIEW_COMM_ID_PREFIX}${review.id}`;
+  comm.id = `${EDIT_REVIEW_COMM_ID_PREFIX}${reviewID}`;
   comm.value =review.comments;
   comm.setAttribute('maxlength', 1000);
   let commLbl = document.createElement('label');
@@ -524,7 +601,12 @@ var createEditReviewSection = (reviewID)=>{
 var createEdititedReviewActionsButtons=(div, reviewID, index)=>{
   
   let save = document.createElement('button');
-  save.setAttribute('onclick', `saveUpdatedReview({'reviewID': ${reviewID}, 'index':${index}})`);
+  if(index){
+    save.setAttribute('onclick', `saveUpdatedReview({'reviewID': ${reviewID}, 'index':${index}})`);
+  }else{
+    save.setAttribute('onclick', `saveUpdatedReview({'reviewID': '${reviewID}', 'index':${index}})`);
+  }
+  
   let sp1 = document.createElement('span');
   sp1.className = 'fontawesome-save';
   sp1.innerHTML = 'Save';
@@ -534,7 +616,12 @@ var createEdititedReviewActionsButtons=(div, reviewID, index)=>{
   save.appendChild(sp1);
 
   let cancel = document.createElement('button');
-  cancel.setAttribute('onclick', `cancelEditingReview({'reviewID': ${reviewID}, 'index':${index}})`);
+  if(index){
+    cancel.setAttribute('onclick', `cancelEditingReview({'reviewID': ${reviewID}, 'index':${index}})`);
+  }else{
+    cancel.setAttribute('onclick', `cancelEditingReview({'reviewID': '${reviewID}', 'index':${index}})`);
+  }
+  
   let sp2 = document.createElement('span');
   sp2.className = 'fontawesome-remove-sign';
   sp2.innerHTML = 'Exit';
@@ -605,25 +692,42 @@ var saveUpdatedReview= (info)=>{
       console.log('Start updating the review: ' + reviewID + 'with below info');
       console.log(reviewInfo);
       reviewInfo.review_id = reviewID;
+      if(index){ // normal review update
+        let jsonData = JSON.stringify(reviewInfo);
 
-      let jsonData = JSON.stringify(reviewInfo);
+        let failCallback = (response)=>{
+          let myRev = restaurantReviewsList[index];
 
-      let failCallback = (response)=>{
-        let myRev = restaurantReviewsList[index];
-        myRev.name = reviewInfo.name;
-        myRev.comments = reviewInfo.comments;
-        myRev.rating = reviewInfo.rating;
+          myRev.name = reviewInfo.name;
+          myRev.comments = reviewInfo.comments;
+          myRev.rating = reviewInfo.rating;
 
-        addToSyncListReviews(jsonData,CATEGORY_UPDATE_REVIEW);
+          addToSyncListReviews(jsonData,CATEGORY_UPDATE_REVIEW);
+          addResturantReviews(resturantID,restaurantReviewsList);
 
-        let mydiv = document.getElementById(`${SINGLE_REVIEW_DIV_PREFIX}${reviewID}`);
-        mydiv.innerHTML = '';
-        createReviewHTML(myRev, mydiv);
+          let mydiv = document.getElementById(`${SINGLE_REVIEW_DIV_PREFIX}${reviewID}`);
+          mydiv.innerHTML = '';
+          createReviewHTML(myRev, mydiv);
+        }
+
+        updateRestaurantReview(jsonData,afterSubmittingReviewSuccess, failCallback);
+
+        originalModifiedReviewsInnerHTML.delete(reviewID);
+      }else{
+        // not submitted review.
+        // TODO
+        let newDBContent = notSubmittedReviews.get(reviewID);
+        let stringObj = JSON.stringify(reviewInfo)
+        newDBContent.data = stringObj;
+        updateExistingSyncObject(reviewID, newDBContent);
+
+        // let mydiv = document.getElementById(`${SINGLE_REVIEW_DIV_PREFIX}${reviewID}`);
+        // mydiv.innerHTML = '';
+        afterSubmittingReviewFail(newDBContent, reviewID, true);
+
+        originalModifiedReviewsInnerHTML.delete(reviewID);
       }
-
-      updateRestaurantReview(jsonData,afterSubmittingReviewSuccess, failCallback);
-
-      originalModifiedReviewsInnerHTML.delete(reviewID);
+      
     }
   }
 }

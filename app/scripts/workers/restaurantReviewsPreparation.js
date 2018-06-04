@@ -5,7 +5,9 @@ self.onmessage = (message)=>{
 	let reviews = message.data.reviews;
 	let ul = '<div>';
 	reviews.forEach(review => {
-	    ul = ul + generateReviewHTML(review);
+		if(review){
+			ul = ul + generateReviewHTML(review);
+		}
 	});
 	ul = ul + '</div>'
 	postMessage({'ul': ul});

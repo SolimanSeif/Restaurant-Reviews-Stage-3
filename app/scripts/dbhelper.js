@@ -107,7 +107,7 @@ class DBHelper {
 
   static fetchRestaurantReviews(id, callback, callbackFailedReviews) {
     // fetch all restaurants with proper error handling.
-
+      
       fetch(`http://localhost:1337/reviews/?restaurant_id=${id}`, {
         cache: 'no-cache'
       }).then(obj => {
@@ -128,6 +128,29 @@ class DBHelper {
           getAllPendingReviews(id, callbackFailedReviews);
         }
       });
+
+        // resturantReviews(id,(error,reviews)=>{
+        // if(reviews && callback){
+        //   callback(undefined, reviews);
+        // }
+
+        // if(callbackFailedReviews){
+        //   getAllPendingReviews(id, callbackFailedReviews);
+        // }
+
+        // fetch(`http://localhost:1337/reviews/?restaurant_id=${id}`, {
+        //   cache: 'no-cache'
+        // }).then(obj => {
+        //   return obj.json();
+        // }).then(fetchedReviews =>{
+        //   if(fetchedReviews){
+        //     addResturantReviews(id, fetchedReviews);
+        //   }
+        // }).catch(e=>{
+        //     console.log('Error during fetching resturant reviews.. ' + e);
+        //   });
+        // });
+      
   }
 
   static fetchSingleReview(reviewID, callback, callbackFailedReviews) {

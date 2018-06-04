@@ -15,20 +15,32 @@ document.addEventListener('DOMContentLoaded', (event) => {
 });
 
 
+var getSearchCriteriaValues=(restaurants = self.restaurants)=>{
+  let searchWorker = new Worker('scripts/workers/searchCriteriaWorker.js');
+  searchWorker.postMessage( {'restaurants': self.restaurants} );
+  searchWorker.onmessage = (message)=>{
+    let cuisinesHTML = message.data.CuisinesHTML;
+    let neighborhoodsHTML = message.data.NeighborhoodsHTML;
+    document.getElementById('neighborhoods-select').innerHTML = neighborhoodsHTML;
+    document.getElementById('cuisines-select').innerHTML = cuisinesHTML;
+  }
+}
+
 var fillSearchingCriteria = ()=>{
   if (window.Worker){
-    DBHelper.fetchRestaurants(undefined, (error, restaurants)=>{
-      self.restaurants = restaurants;
-      let searchWorker = new Worker('scripts/workers/searchCriteriaWorker.js');
-      searchWorker.postMessage( {'restaurants': self.restaurants} );
-      searchWorker.onmessage = (message)=>{
-        let cuisinesHTML = message.data.CuisinesHTML;
-        let neighborhoodsHTML = message.data.NeighborhoodsHTML;
-        document.getElementById('neighborhoods-select').innerHTML = neighborhoodsHTML;
-        document.getElementById('cuisines-select').innerHTML = cuisinesHTML;
+    allResturnats((error,rests)=>{
+      if(rests){
+        self.restaurants = rests;
+        getSearchCriteriaValues(restaurants);
+      }else{
+        DBHelper.fetchRestaurants(undefined, (error, restaurants)=>{
+          self.restaurants = restaurants;
+          getSearchCriteriaValues(restaurants);
+        });
       }
     });
-    
+
+
   }else{
     DBHelper.fetchSearchValues((error, neighborhoods, cuisines) => {
       if (error) { // Got an error
@@ -137,12 +149,22 @@ var updateRestaurants = () => {
         'neighborhood': neighborhood,
         'favoriteURLCondition': favoriteURLCondition});
     }else{
-      DBHelper.fetchRestaurants(favoriteURLCondition, (error, restaurants)=>{
-        resturantSearchWorker.postMessage({
-        'restaurants': restaurants, 
-        'cuisine': cuisine,
-        'neighborhood': neighborhood,
-        'favoriteURLCondition': favoriteURLCondition});
+      allResturnats((error,rests)=>{
+        if(rests){
+          resturantSearchWorker.postMessage({
+            'restaurants': rests, 
+            'cuisine': cuisine,
+            'neighborhood': neighborhood,
+            'favoriteURLCondition': favoriteURLCondition});
+        }else{
+          DBHelper.fetchRestaurants(favoriteURLCondition, (error, restaurants)=>{
+            resturantSearchWorker.postMessage({
+            'restaurants': restaurants, 
+            'cuisine': cuisine,
+            'neighborhood': neighborhood,
+            'favoriteURLCondition': favoriteURLCondition});
+          });
+        }
       });
     }
     resturantSearchWorker.onmessage = (message)=>{
