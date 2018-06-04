@@ -36,14 +36,16 @@ var allResturnats = function allResturnats(callback) {
 		var tx = db.transaction(objectStoreName);
 		var store = tx.objectStore(objectStoreName);
 		var data = store.get(allRestKey);
-		tx.oncomplete = function () {
-			db.close();
-		};
+
 		data.onsuccess = function (event) {
 			callback(null, event.target.result);
 		};
-		// callback(null, data);
-		// return data;
+		data.onerror = function (error) {
+			callback(error, undefined);
+		};
+		tx.oncomplete = function () {
+			db.close();
+		};
 	};
 };
 
@@ -55,9 +57,12 @@ function resturantByID(id, callback) {
 		var tx = db.transaction(objectStoreName);
 		var store = tx.objectStore(objectStoreName);
 		var data = store.get(id);
-		// callback(null, data);
+
 		data.onsuccess = function (event) {
 			callback(null, event.target.result);
+		};
+		data.onerror = function (error) {
+			callback(error, undefined);
 		};
 		tx.oncomplete = function () {
 			db.close();
@@ -66,8 +71,6 @@ function resturantByID(id, callback) {
 }
 
 function resturantReviews(id, callback) {
-	var count = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : -1;
-
 	var open = getIDBObject();
 
 	open.onsuccess = function () {
@@ -81,6 +84,10 @@ function resturantReviews(id, callback) {
 		var data = store.get(k);
 		data.onsuccess = function (event) {
 			callback(null, event.target.result);
+		};
+
+		data.onerror = function (error) {
+			callback(error, undefined);
 		};
 		tx.oncomplete = function () {
 			db.close();
@@ -136,36 +143,60 @@ var addResturantReviews = function addResturantReviews(id, restReviewsJson) {
 
 var addToSyncListReviews = function addToSyncListReviews(data, category) {
 	var open = getIDBObject();
+
+	// const objKey = `Sync_action_no_${syncOperationIndex}`;
+	// syncOperationIndex++;
+
+	var objKey = 'Sync_action_no_' + Date.now();
+
+	var syncData = { 'data': data, 'category': -1 };
+	if (category === 'NewReview') {
+		var tmp = JSON.parse(data);
+		tmp.id = objKey;
+		syncData.data = JSON.stringify(tmp);
+		syncData.category = syncCreateNewRestaurantReviewCount;
+		// store.put(data, syncCreateNewRestaurantReviewCount);
+		// syncCreateNewRestaurantReviewCount++;
+	} else if (category === 'DeleteReview') {
+		syncData.category = syncDeleteRestaurantReviewCount;
+
+		// store.put(data, syncDeleteRestaurantReviewCount);
+		// syncDeleteRestaurantReviewCount++;
+	} else if (category === 'UpdateReview') {
+		syncData.category = syncUpdateRestaurantReviewCount;
+		// store.put(data, syncUpdateRestaurantReviewCount);
+		// syncUpdateRestaurantReviewCount++;
+	} else if (category === 'Favorite') {
+		syncData.category = syncFavoriteRestaurantCount;
+		// store.put(data, syncFavoriteRestaurantCount);
+		// syncFavoriteRestaurantCount++;
+	} else if (category === 'unFavorite') {
+		syncData.category = syncUnfavoriteRestaurantCount;
+		// store.put(data, syncUnfavoriteRestaurantCount);
+		// syncUnfavoriteRestaurantCount++;
+	}
+
 	open.onsuccess = function () {
 		var db = open.result;
 		var tx = db.transaction(syncObjectStoreName, 'readwrite');
 		var store = tx.objectStore(syncObjectStoreName);
-		var syncData = { 'data': data, 'category': -1 };
-		if (category === 'NewReview') {
-			syncData.category = syncCreateNewRestaurantReviewCount;
-			// store.put(data, syncCreateNewRestaurantReviewCount);
-			// syncCreateNewRestaurantReviewCount++;
-		} else if (category === 'DeleteReview') {
-			syncData.category = syncDeleteRestaurantReviewCount;
 
-			// store.put(data, syncDeleteRestaurantReviewCount);
-			// syncDeleteRestaurantReviewCount++;
-		} else if (category === 'UpdateReview') {
-			syncData.category = syncUpdateRestaurantReviewCount;
-			// store.put(data, syncUpdateRestaurantReviewCount);
-			// syncUpdateRestaurantReviewCount++;
-		} else if (category === 'Favorite') {
-			syncData.category = syncFavoriteRestaurantCount;
-			// store.put(data, syncFavoriteRestaurantCount);
-			// syncFavoriteRestaurantCount++;
-		} else if (category === 'unFavorite') {
-			syncData.category = syncUnfavoriteRestaurantCount;
-			// store.put(data, syncUnfavoriteRestaurantCount);
-			// syncUnfavoriteRestaurantCount++;
-		}
-		store.put(syncData, syncOperationIndex);
-		syncOperationIndex++;
+		store.put(syncData, objKey);
 
+		tx.oncomplete = function () {
+			db.close();
+		};
+	};
+	return { 'key': objKey, 'value': syncData };
+};
+
+var updateExistingSyncObject = function updateExistingSyncObject(objKey, newValue) {
+	var open = getIDBObject();
+	open.onsuccess = function () {
+		var db = open.result;
+		var tx = db.transaction(syncObjectStoreName, 'readwrite');
+		var store = tx.objectStore(syncObjectStoreName);
+		store.put(newValue, objKey);
 		tx.oncomplete = function () {
 			db.close();
 		};
@@ -181,11 +212,13 @@ var getAllPendingReviews = function getAllPendingReviews(resturantID, callback) 
 		store.openCursor().onsuccess = function (event) {
 			var cursor = event.target.result;
 			if (cursor) {
-				var rev = cursor.value.data;
-				if (rev.restaurant_id === resturantID && cursor.value.category < syncFavoriteRestaurantCount) {
-					callback(rev);
+				if (cursor.value.category < syncFavoriteRestaurantCount) {
+					var rev = cursor.value;
+					if (JSON.parse(cursor.value.data).restaurant_id === resturantID) {
+						callback(rev, cursor.key, false);
+					}
+					cursor.continue();
 				}
-				cursor.continue();
 			}
 		};
 	};

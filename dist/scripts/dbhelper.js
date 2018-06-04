@@ -132,6 +132,28 @@ var DBHelper = function () {
           getAllPendingReviews(id, callbackFailedReviews);
         }
       });
+
+      // resturantReviews(id,(error,reviews)=>{
+      // if(reviews && callback){
+      //   callback(undefined, reviews);
+      // }
+
+      // if(callbackFailedReviews){
+      //   getAllPendingReviews(id, callbackFailedReviews);
+      // }
+
+      // fetch(`http://localhost:1337/reviews/?restaurant_id=${id}`, {
+      //   cache: 'no-cache'
+      // }).then(obj => {
+      //   return obj.json();
+      // }).then(fetchedReviews =>{
+      //   if(fetchedReviews){
+      //     addResturantReviews(id, fetchedReviews);
+      //   }
+      // }).catch(e=>{
+      //     console.log('Error during fetching resturant reviews.. ' + e);
+      //   });
+      // });
     }
   }, {
     key: 'fetchSingleReview',

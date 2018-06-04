@@ -6,7 +6,9 @@ self.onmessage = function (message) {
 	var reviews = message.data.reviews;
 	var ul = '<div>';
 	reviews.forEach(function (review) {
-		ul = ul + generateReviewHTML(review);
+		if (review) {
+			ul = ul + generateReviewHTML(review);
+		}
 	});
 	ul = ul + '</div>';
 	postMessage({ 'ul': ul });
