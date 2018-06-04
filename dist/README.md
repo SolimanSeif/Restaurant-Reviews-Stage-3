@@ -17,6 +17,7 @@ Installation steps:
 its required to have node installed on you machine.
 after that install the project dependencies by running below command under the project directory.
 
+npm install 
 
 -----------------------------------------------------------------------------------------------------------------
 Run the project:
