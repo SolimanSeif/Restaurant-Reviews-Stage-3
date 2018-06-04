@@ -1,6 +1,7 @@
 
 const cacheName = 'RestaurantReviews';
-
+const DB_PORT = '1337';
+const DB_HOST_NAME = 'localhost';
 // const IDB_Name = 'mws-restaurant-stage-1';
 // const IDB_Version = 1;
 // const SYNC_ObjectStoreName = 'syncRequests';
@@ -36,21 +37,34 @@ self.addEventListener('fetch', function(event) {
 				return;
 			}
 		}
-		
-		event.respondWith(
-			caches.open(cacheName).then(function(cache) {
-				return cache.match(event.request).then(function (response) {
-					return response || fetch(event.request).then(function(response) {
-						if(event.request != 'reviews/'){
+
+		if(!(requestURL.port === DB_PORT && requestURL.hostname === DB_HOST_NAME)){
+			event.respondWith(
+				caches.open(cacheName).then(function(cache) {
+					return cache.match(event.request).then(function (response) {
+						return response || fetch(event.request).then(function(response) {
 							cache.put(event.request, response.clone());
-						}
-						return response;
-					}).catch(error =>{
-						console.log(error);
+							return response;
+						}).catch(error =>{
+							console.log(error);
+						});
 					});
-				});
-			})
-		);
+				})
+			);
+		}else{
+			// console.log('worker request URL==> ' + event.request.url);
+			// console.log('worker request PORT==> ' + requestURL.port);
+			// console.log('worker request HOST NAME==> ' + requestURL.hostname);
+			
+			event.respondWith(
+				fetch(event.request).then(function(response) {
+					return response;
+				}).catch(error =>{
+					console.log(error);
+				})
+					
+			);
+		}
 	}
 });
 
