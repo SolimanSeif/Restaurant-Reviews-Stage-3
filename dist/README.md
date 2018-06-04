@@ -22,7 +22,7 @@ npm install
 -----------------------------------------------------------------------------------------------------------------
 Run the project:
 ----------------
-you can start the server by running the command under the dist folder..
-node server
+you can start the server by running below command under the dist folder..
+"node server"
 and access the application from URI
 http://localhost:9000/
