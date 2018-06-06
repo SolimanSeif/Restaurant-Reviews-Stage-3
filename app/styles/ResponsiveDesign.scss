@@ -80,21 +80,4 @@
 	color: #8A4500;
 }
 
-[class*="fontawesome-"]:before {
-  /*color: #8A4500;*/
-  display: inline-block;
-  font-family: 'fontawesome', sans-serif;
-  text-shadow: 3px 3px 3px #aaa;
-  width: 2em;
 
-}
-
-a:hover [class*="fontawesome-"]:before {
-  color: #3d85c6;
-}
-
-[class*="fontawesome-"]{
-	background: none;
-	border: none;
-	font-size: inherit;
-}

@@ -41,23 +41,23 @@
     <section id="map-container" >
 		  <div id="skip"><a href="#filterCond">Skip to Search area</a></div>
       <div id="map" aria-label="google map API" role="application">
-        <button id="loadMapButton" class="loadMapButton" onclick="loadMapComponent()" role="presentation" aria-label="Click to Load Map"> <span class="typicons-location"></span></button>
+        <button id="loadMapButton" class="loadMapButton fa" onclick="loadMapComponent()" role="presentation" aria-label="Click to Load Map"> &#xf041;</button>
       </div>
     </section>
 
     <section>
       <div class="filter-options" id="filterCond" tabindex="-1" role="search">
-        <h2>Search Restaurants <span class="fontawesome-search" /></h2>
+        <h2 class="fa">Search Restaurants &#xf002; </h2>
         
         <div id="searchFavoriteDiv" class="searchFavoriteDiv">
           <input type="radio" name="favoriteSearch" id="favoriteSearchAll" value="all" checked="checked" onchange="updateRestaurants()">
-          <label for="favoriteSearchAll" title="All">All <span class="fontawesome-heart-empty"><span class="fontawesome-heart"></span></span></label>
+          <label for="favoriteSearchAll" title="All" class="fa">All &#xf08a; &#xf004;</label>
 
           <input type="radio" name="favoriteSearch" id="favoriteSearchFavorite" value="true" class="favoriteRadio" onchange="updateRestaurants()">
-          <label for="favoriteSearchFavorite" title="Favorite Filtration">Favorite <span class="fontawesome-heart"></span></label>
+          <label for="favoriteSearchFavorite" title="Favorite Filtration" class="fa">Favorite &#xf004;</label>
 
           <input type="radio" name="favoriteSearch" id="favoriteSearchUnFavorite" value="false" class="favoriteRadio" onchange="updateRestaurants()">
-          <label for="favoriteSearchUnFavorite" title="Unfavorite Filtration">UnFavorite <span class="fontawesome-heart-empty"></span></label>
+          <label for="favoriteSearchUnFavorite" title="Unfavorite Filtration" class="fa">UnFavorite &#xf08a;</label>
         </div>
 
         <div class="searchingCriteriaBar" role="search">

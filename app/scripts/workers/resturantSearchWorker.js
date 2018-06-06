@@ -46,12 +46,12 @@ var generateRestaurantHTML = (restaurant, index) => {
 
   
   
-  let heartClass = 'fontawesome-heart-empty';
+  let incont = '&#xf08a;';
   if(restaurant.is_favorite === true || restaurant.is_favorite === 'true'){
-    heartClass = 'fontawesome-heart';
+    incont = '&#xf004;';
   }
 
-  let favButton = `<button id="FavoritMark_${restaurant.id}" class="${heartClass} favoriteButton" onclick="markRestaurantAsFavorit(${restaurant.id}, ${restaurant.is_favorite}, ${index})" role="presentation" aria-label="Add to Favorite"></button>`;
+  let favButton = `<button id="FavoritMark_${restaurant.id}" class="fa favoriteButton" onclick="markRestaurantAsFavorit(${restaurant.id}, ${restaurant.is_favorite}, ${index})" role="presentation" aria-label="Add to Favorite">${incont}</button>`;
   
 
   const name = `<h2>${restaurant.name}${favButton}</h2>`;

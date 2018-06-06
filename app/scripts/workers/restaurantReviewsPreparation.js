@@ -29,8 +29,8 @@ var generateReviewHTML = (review) => {
 
   let comments = `<p>${review.comments}</p>`;
   
-  let editButton = `<button class="reviewActionButton" onclick="editExistingReview(${review.id})" role="presentation" aria-label="Edit Review"><span class="fontawesome-edit">Edit</span></button>`;
-  let deleteButton = `<button class="reviewActionButton" onclick="deleteReviewAction(${review.id})" role="presentation" aria-label="Delete Review"><span class="fontawesome-cut">Delete</span></button>`;
+  let editButton = `<button class="reviewActionButton fa" onclick="editExistingReview(${review.id})" role="presentation" aria-label="Edit Review">&#xf044; Edit</button>`;
+  let deleteButton = `<button class="reviewActionButton fa" onclick="deleteReviewAction(${review.id})" role="presentation" aria-label="Delete Review">&#xf00d; Delete</button>`;
 
   // let editDiv = `<div class="reviewActionsDiv" role="form">${editButton}${deleteButton}</div>`;
 

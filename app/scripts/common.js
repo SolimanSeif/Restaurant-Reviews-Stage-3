@@ -71,10 +71,10 @@ var markRestaurantAsFavorit = (restaurantID, is_favorite, index)=>{
 
   let switchSpanIcon=()=>{
   	let span = document.getElementById(`${CONST_FAVORITIFY_ACTION_SPAN_ID_PREFIX}${restaurantID}`);
-  	if(span.className === 'fontawesome-heart-empty'){
-  		span.className = 'fontawesome-heart';
+  	if(is_favorite === true){
+      span.innerHTML = '&#xf08a;';
   	}else{
-  		span.className = 'fontawesome-heart-empty';
+  		span.innerHTML = '&#xf004;';
   	}
     span.style.color = '#8a4500';
   	span.setAttribute('onclick',`markRestaurantAsFavorit(${restaurantID}, ${!is_favorite}, ${index})`);
