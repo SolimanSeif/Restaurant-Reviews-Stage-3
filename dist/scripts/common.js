@@ -3,6 +3,7 @@
 var CONST_FAVORITIFY_ACTION_SPAN_ID_PREFIX = 'FavoritMark_';
 var CATEGORY_MARK_AS_FAVORIT = 'Favorite';
 var CATEGORY_MARK_AS_UN_FAVORIT = 'unFavorite';
+var MARK_LOCATIONS_ON_MAP = false;
 
 var syncInfo = function syncInfo() {
 
@@ -112,5 +113,13 @@ var markRestaurantAsFavorit = function markRestaurantAsFavorit(restaurantID, is_
   };
 
   favoriteRestaurant(restaurantID, !is_favorite, successCallback, failCallback);
+};
+
+var loadMapComponent = function loadMapComponent() {
+  MARK_LOCATIONS_ON_MAP = true;
+  document.getElementById('map').innerHTML = '';
+  var scr = document.createElement('script');
+  scr.src = 'https://maps.googleapis.com/maps/api/js?key=AIzaSyDwMy2iEU4nOLJA70oAdpF2uG9ey8jBBlU&libraries=places&callback=initMap';
+  document.getElementsByTagName('head')[0].appendChild(scr);
 };
 //# sourceMappingURL=common.js.map

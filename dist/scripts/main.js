@@ -6,14 +6,24 @@ var restaurants = void 0,
 var map;
 var markers = [];
 
+document.addEventListener('readystatechange', function (event) {
+  if (event.target.readyState === 'interactive') {
+    console.log('I am in interactive state....');
+  } else if (event.target.readyState === 'complete') {
+    console.log('I am in complete state....');
+
+    fillSearchingCriteria();
+    updateRestaurants();
+  }
+});
+
 /**
  * Fetch neighborhoods and cuisines as soon as the page is loaded.
  */
 document.addEventListener('DOMContentLoaded', function (event) {
-  // fetchNeighborhoods();
-  // fetchCuisines();
+  console.log('I am in DOMContentLoaded ..');
 
-  fillSearchingCriteria();
+  // fillSearchingCriteria();
 });
 
 var getSearchCriteriaValues = function getSearchCriteriaValues() {
@@ -129,7 +139,7 @@ window.initMap = function () {
     center: loc,
     scrollwheel: false
   });
-  updateRestaurants();
+  manageMapMarker();
 };
 
 /**
@@ -322,16 +332,40 @@ var createRestaurantHTML = function createRestaurantHTML(restaurant, index) {
  * Add markers for current restaurants to the map.
  */
 var addMarkersToMap = function addMarkersToMap() {
-  var restaurants = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : self.restaurants;
+  var rests = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : self.restaurants;
 
-  restaurants.forEach(function (restaurant) {
-    // Add marker to the map
-    var marker = DBHelper.mapMarkerForRestaurant(restaurant, self.map);
-    google.maps.event.addListener(marker, 'click', function () {
-      window.location.href = marker.url;
+  if (MARK_LOCATIONS_ON_MAP === true) {
+    if (rests) {
+      rests.forEach(function (restaurant) {
+        // Add marker to the map
+        var marker = DBHelper.mapMarkerForRestaurant(restaurant, self.map);
+        google.maps.event.addListener(marker, 'click', function () {
+          window.location.href = marker.url;
+        });
+        self.markers.push(marker);
+      });
+    }
+  }
+};
+
+var manageMapMarker = function manageMapMarker() {
+  var rests = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : restaurants;
+
+  if (rests) {
+    addMarkersToMap(rests);
+  } else {
+    allResturnats(function (error, rests) {
+      if (rests) {
+        self.restaurants = rests;
+        addMarkersToMap(rests);
+      } else {
+        DBHelper.fetchRestaurants(undefined, function (error, restaurants) {
+          self.restaurants = restaurants;
+          addMarkersToMap(restaurants);
+        });
+      }
     });
-    self.markers.push(marker);
-  });
+  }
 };
 
 /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
