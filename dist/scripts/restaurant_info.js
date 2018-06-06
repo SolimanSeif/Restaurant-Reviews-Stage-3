@@ -105,13 +105,14 @@ var fillRestaurantHTML = function fillRestaurantHTML() {
   var name = document.getElementById('restaurant-name');
   name.innerHTML = restaurant.name;
 
-  var heartClass = 'fontawesome-heart-empty';
+  var heartClass = '&#xf08a;';
   if (restaurant.is_favorite === true || restaurant.is_favorite === 'true') {
-    heartClass = 'fontawesome-heart';
+    heartClass = '&#xf004;';
   }
   var favSpan = document.createElement('button');
   favSpan.id = '' + CONST_FAVORITIFY_ACTION_SPAN_ID_PREFIX + restaurant.id;
-  favSpan.className = heartClass;
+  favSpan.className = 'fa favoriteButton';
+  favSpan.innerHTML = heartClass;
   favSpan.setAttribute('onclick', 'markRestaurantAsFavorit(' + restaurant.id + ', ' + restaurant.is_favorite + ', -1)');
   favSpan.setAttribute('role', 'presentation');
   favSpan.setAttribute('aria-label', 'Add to Favorite');
@@ -276,23 +277,20 @@ var createReviewHeaderSection = function createReviewHeaderSection(div, review) 
 var createEditAndDeleteButtons = function createEditAndDeleteButtons(div, review, editOnClickAction, deleteOnClickAction) {
   var bt1 = document.createElement('button');
   bt1.setAttribute('onclick', editOnClickAction);
-  var spn1 = document.createElement('span');
-  spn1.className = 'fontawesome-edit';
-  spn1.innerHTML = 'Edit';
-  bt1.className = 'reviewActionButton';
+  bt1.innerHTML = '&#xf044; Edit';
+  bt1.className = 'fa reviewActionButton';
   bt1.setAttribute('role', 'presentation');
   bt1.setAttribute('aria-label', 'Edit Review');
-  bt1.appendChild(spn1);
 
   var btn2 = document.createElement('button');
   btn2.setAttribute('onclick', deleteOnClickAction);
-  var spn2 = document.createElement('span');
-  spn2.className = 'fontawesome-cut';
-  spn2.innerHTML = 'Delete';
-  btn2.className = 'reviewActionButton';
+  // let spn2 = document.createElement('span');
+  // spn2.className = 'fontawesome-cut';
+  btn2.innerHTML = '&#xf00d; Delete';
+  btn2.className = 'fa reviewActionButton';
   btn2.setAttribute('role', 'presentation');
   btn2.setAttribute('aria-label', 'Delete Review');
-  btn2.appendChild(spn2);
+  // btn2.appendChild(spn2);
 
   div.appendChild(btn2);
   div.appendChild(bt1);
@@ -621,13 +619,13 @@ var createEdititedReviewActionsButtons = function createEdititedReviewActionsBut
     save.setAttribute('onclick', 'saveUpdatedReview({\'reviewID\': \'' + reviewID + '\', \'index\':' + index + '})');
   }
 
-  var sp1 = document.createElement('span');
-  sp1.className = 'fontawesome-save';
-  sp1.innerHTML = 'Save';
-  save.className = 'editReviewActionButton';
+  // let sp1 = document.createElement('span');
+  // sp1.className = 'fontawesome-save';
+  save.innerHTML = '&#xf1d8; Save';
+  save.className = 'fa editReviewActionButton';
   save.setAttribute('role', 'presentation');
   save.setAttribute('aria-label', 'Save Modified Review');
-  save.appendChild(sp1);
+  // save.appendChild(sp1);
 
   var cancel = document.createElement('button');
   if (index) {
@@ -636,13 +634,13 @@ var createEdititedReviewActionsButtons = function createEdititedReviewActionsBut
     cancel.setAttribute('onclick', 'cancelEditingReview({\'reviewID\': \'' + reviewID + '\', \'index\':' + index + '})');
   }
 
-  var sp2 = document.createElement('span');
-  sp2.className = 'fontawesome-remove-sign';
-  sp2.innerHTML = 'Exit';
-  cancel.className = 'editReviewActionButton';
+  // let sp2 = document.createElement('span');
+  // sp2.className = 'fontawesome-remove-sign';
+  cancel.innerHTML = '&#xf05c; Exit';
+  cancel.className = 'fa editReviewActionButton';
   cancel.setAttribute('role', 'presentation');
   cancel.setAttribute('aria-label', 'Discard Review modifications');
-  cancel.appendChild(sp2);
+  // cancel.appendChild(sp2);
 
   div.appendChild(save);
   div.appendChild(cancel);

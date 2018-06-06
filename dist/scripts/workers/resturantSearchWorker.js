@@ -49,12 +49,12 @@ var generateRestaurantHTML = function generateRestaurantHTML(restaurant, index) 
   var img = '<img alt="' + alt + '" data-src="' + imgsList[3] + '" class="restaurant-img" >';
   picture = picture + img1 + img2 + img + '</picture>';
 
-  var heartClass = 'fontawesome-heart-empty';
+  var incont = '&#xf08a;';
   if (restaurant.is_favorite === true || restaurant.is_favorite === 'true') {
-    heartClass = 'fontawesome-heart';
+    incont = '&#xf004;';
   }
 
-  var favButton = '<button id="FavoritMark_' + restaurant.id + '" class="' + heartClass + ' favoriteButton" onclick="markRestaurantAsFavorit(' + restaurant.id + ', ' + restaurant.is_favorite + ', ' + index + ')" role="presentation" aria-label="Add to Favorite"></button>';
+  var favButton = '<button id="FavoritMark_' + restaurant.id + '" class="fa favoriteButton" onclick="markRestaurantAsFavorit(' + restaurant.id + ', ' + restaurant.is_favorite + ', ' + index + ')" role="presentation" aria-label="Add to Favorite">' + incont + '</button>';
 
   var name = '<h2>' + restaurant.name + favButton + '</h2>';
 

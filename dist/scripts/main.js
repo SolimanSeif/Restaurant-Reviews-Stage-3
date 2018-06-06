@@ -298,13 +298,14 @@ var createRestaurantHTML = function createRestaurantHTML(restaurant, index) {
   var name = document.createElement('h2');
   name.innerHTML = restaurant.name;
 
-  var heartClass = 'fontawesome-heart-empty';
+  var heartClass = '&#xf08a;';
   if (restaurant.is_favorite === true || restaurant.is_favorite === 'true') {
-    heartClass = 'fontawesome-heart';
+    heartClass = '&#xf004;';
   }
   var favSpan = document.createElement('button');
   favSpan.id = '' + CONST_FAVORITIFY_ACTION_SPAN_ID_PREFIX + restaurant.id;
-  favSpan.className = heartClass;
+  favSpan.className = 'fa';
+  favSpan.innerHTML = heartClass;
   favSpan.setAttribute('onclick', 'markRestaurantAsFavorit(' + restaurant.id + ', ' + restaurant.is_favorite + ', ' + index + ')');
   favSpan.setAttribute('role', 'presentation');
   favSpan.setAttribute('aria-label', 'Add to Favorite');
