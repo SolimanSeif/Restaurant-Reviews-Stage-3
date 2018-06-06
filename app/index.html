@@ -18,14 +18,13 @@
   <link rel="preload" href="scripts/workers/resturantSearchWorker.js" as="script">
   
   <link rel="preconnect" href="http://localhost:1337/" crossorigin="anonymous">
-  <link rel="preconnect" href="http://weloveiconfonts.com/">
+  
   <link rel="preconnect" href="https://maps.gstatic.com" crossorigin="anonymous">
-  <link rel="preconnect" href="https://maps.googleapis.com/maps/api/js?key=AIzaSyDwMy2iEU4nOLJA70oAdpF2uG9ey8jBBlU&libraries=places&callback=initMap" crossorigin="anonymous">
 
   <link rel="stylesheet" href="styles/styles.css" media="all"/>
 	<link rel="stylesheet" href="styles/ResponsiveDesign.css" media="(min-width: 10px)"/>
   <link rel="stylesheet" src="//normalize-css.googlecode.com/svn/trunk/normalize.css" media="print" crossorigin="anonymous"/>
-  <link rel="stylesheet" href="http://weloveiconfonts.com/api/?family=fontawesome" media="all"/>
+  
 
   
   <title>Restaurant Reviews</title>
@@ -40,12 +39,15 @@
 
   <main id="maincontent">
     <section id="map-container" >
-		<div id="skip"><a href="#filterCond">Skip to Search area</a></div>
-      <div id="map" aria-label="google map API" role="application"></div>
+		  <div id="skip"><a href="#filterCond">Skip to Search area</a></div>
+      <div id="map" aria-label="google map API" role="application">
+        <button id="loadMapButton" class="loadMapButton" onclick="loadMapComponent()" role="presentation" aria-label="Click to Load Map"> <span class="typicons-location"></span></button>
+      </div>
     </section>
+
     <section>
       <div class="filter-options" id="filterCond" tabindex="-1" role="search">
-        <h2>Search Restaurants</h2>
+        <h2>Search Restaurants <span class="fontawesome-search" /></h2>
         
         <div id="searchFavoriteDiv" class="searchFavoriteDiv">
           <input type="radio" name="favoriteSearch" id="favoriteSearchAll" value="all" checked="checked" onchange="updateRestaurants()">
@@ -80,14 +82,15 @@
   </main>
 
   
-  <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDwMy2iEU4nOLJA70oAdpF2uG9ey8jBBlU&libraries=places&callback=initMap"></script>
+  
   <script async defer src="scripts/sw.js"></script>
-  <script async defer src="scripts/common.js"></script>
+  
   <script async defer src="scripts/modificationOperations.js"></script>
   
   <script type="text/javascript" src="scripts/idb.js"></script>
   <script type="application/javascript" charset="utf-8" src="scripts/dbhelper.js"></script>
   <script type="application/javascript" charset="utf-8" src="scripts/main.js"></script>
+  <script type="application/javascript" charset="utf-8" src="scripts/common.js"></script>
   
   <footer id="footer">
     Copyright (c) 2017 <a href="/"><strong>Restaurant Reviews</strong></a> All Rights Reserved.

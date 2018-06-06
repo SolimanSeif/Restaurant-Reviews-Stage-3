@@ -46,7 +46,7 @@ self.addEventListener('fetch', function(event) {
 							cache.put(event.request, response.clone());
 							return response;
 						}).catch(error =>{
-							console.log(error);
+							// console.log(error);
 						});
 					});
 				})
@@ -60,7 +60,7 @@ self.addEventListener('fetch', function(event) {
 				fetch(event.request).then(function(response) {
 					return response;
 				}).catch(error =>{
-					console.log(error);
+					// console.log(error);
 				})
 					
 			);

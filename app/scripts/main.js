@@ -2,16 +2,27 @@ let restaurants,
   neighborhoods,
   cuisines
 var map
-var markers = []
+var markers = [];
+
+document.addEventListener('readystatechange', event => {
+  if (event.target.readyState === 'interactive') {
+    console.log('I am in interactive state....');
+  }
+  else if (event.target.readyState === 'complete') {
+    console.log('I am in complete state....');
+        
+    fillSearchingCriteria();
+    updateRestaurants();
+  }
+});
 
 /**
  * Fetch neighborhoods and cuisines as soon as the page is loaded.
  */
 document.addEventListener('DOMContentLoaded', (event) => {
-  // fetchNeighborhoods();
-  // fetchCuisines();
+  console.log('I am in DOMContentLoaded ..');
 
-  fillSearchingCriteria();
+  // fillSearchingCriteria();
 });
 
 
@@ -123,8 +134,9 @@ window.initMap = () => {
     center: loc,
     scrollwheel: false
   });
-  updateRestaurants();
+  manageMapMarker();
 }
+
 
 /**
  * Update page and map for current restaurants.
@@ -312,18 +324,38 @@ var createRestaurantHTML = (restaurant, index) => {
 /**
  * Add markers for current restaurants to the map.
  */
-var addMarkersToMap = (restaurants = self.restaurants) => {
-  restaurants.forEach(restaurant => {
-    // Add marker to the map
-    const marker = DBHelper.mapMarkerForRestaurant(restaurant, self.map);
-    google.maps.event.addListener(marker, 'click', () => {
-      window.location.href = marker.url
-    });
-    self.markers.push(marker);
-  });
+var addMarkersToMap = (rests = self.restaurants) => {
+  if(MARK_LOCATIONS_ON_MAP === true){
+    if(rests){
+      rests.forEach(restaurant => {
+          // Add marker to the map
+        const marker = DBHelper.mapMarkerForRestaurant(restaurant, self.map);
+        google.maps.event.addListener(marker, 'click', () => {
+          window.location.href = marker.url
+        });
+        self.markers.push(marker);
+      });
+    }
+  }
 }
 
-
+var manageMapMarker = (rests= restaurants)=>{
+  if(rests){
+    addMarkersToMap(rests);
+  }else{
+    allResturnats((error,rests)=>{
+      if(rests){
+        self.restaurants = rests;
+        addMarkersToMap(rests);
+      }else{
+        DBHelper.fetchRestaurants(undefined, (error, restaurants)=>{
+          self.restaurants = restaurants;
+          addMarkersToMap(restaurants);
+        });
+      }
+    });
+  }
+}
 
 /* +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ 
   * intersection observer section 

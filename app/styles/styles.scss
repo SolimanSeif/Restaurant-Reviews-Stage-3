@@ -1,3 +1,6 @@
+@import url(http://weloveiconfonts.com/api/?family=fontawesome);
+@import url(http://weloveiconfonts.com/api/?family=typicons);
+
 @charset "utf-8";
 /* CSS Document */
 
@@ -319,3 +322,23 @@ nav.breadcrumb [aria-current="page"] {
 } 
 
 /*=========== modification form =========================*/
+[class*="typicons-"]:before {
+  color: #8A4500;
+  display: inline-block;
+  font-family: 'typicons', sans-serif;
+  text-shadow: 3px 3px 3px #aaa;
+  width: 2em;
+
+}
+
+a:hover [class*="typicons-"]:before {
+  color: #3d85c6;
+}
+
+.loadMapButton{
+  background: none;
+  border: none;
+  width: 100%;
+  height: 100%;
+  font-size: 7em;
+}

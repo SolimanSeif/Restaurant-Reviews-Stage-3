@@ -20,20 +20,32 @@ const NOT_SUBMITTED_REVIEW_DIV_PREFIX= 'notSubmittedReviewDiv_';
  * Initialize Google map, called from HTML.
  */
 
+document.addEventListener('readystatechange', event => {
+  if (event.target.readyState === 'interactive') {
+    console.log('I am in interactive state....');
+  }
+  else if (event.target.readyState === 'complete') {
+    console.log('I am in complete state....');
+    
+    fetchRestaurantFromURL((error, restaurant) => {
+      if (error) { // Got an error!
+        console.error(error);
+      } else {
+        self.restaurant = restaurant;
+        fillBreadcrumb();
+      }
+    });
+  }
+});
+
+
 window.initMap = () => {
-  fetchRestaurantFromURL((error, restaurant) => {
-    if (error) { // Got an error!
-      console.error(error);
-    } else {
-      self.map = new google.maps.Map(document.getElementById('map'), {
-        zoom: 16,
-        center: restaurant.latlng,
-        scrollwheel: false
-      });
-      fillBreadcrumb();
-      DBHelper.mapMarkerForRestaurant(self.restaurant, self.map);
-    }
+  self.map = new google.maps.Map(document.getElementById('map'), {
+    zoom: 16,
+    center: restaurant.latlng,
+    scrollwheel: false
   });
+  DBHelper.mapMarkerForRestaurant(self.restaurant, self.map);
 }
 
 /**
